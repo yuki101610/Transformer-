@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🍃 SimplePlus Beamer Theme
 
 The **SimplePlus Beamer Theme** is a minimalist and elegant LaTeX template tailored for academic and scientific presentations. It has been modified from the [🫐SimpleDarkBlue](https://github.com/pm25/SimpleDarkBlue-BeamerTheme) Beamer Theme and focuses on simplicity and clarity in presentation design.
@@ -23,3 +24,6 @@ Below are some example slides created with the SimplePlus Beamer Theme:
 ## License
 
 This project is released under the **Unlicense License**, granting you complete freedom to use, modify, and distribute the template. For more details, see the [LICENSE](./LICENSE) file.
+=======
+# Transformer-
+>>>>>>> f1f8162c55e892ee29279012c58ce9b9fdd07104
