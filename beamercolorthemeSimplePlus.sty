@@ -1,0 +1,63 @@
+%-------------------------------------------------------------
+%  Package: beamertheme-SimplePlus
+%  Author: Pin-Yen Huang (pyhuang97@gmail.com)
+%  Version: 1.1, 2025-01-07
+%  Link: https://github.com/pm25/SimplePlus-BeamerTheme
+%  This is free and unencumbered software released into the
+%  public domain; see <http://unlicense.org> for details.
+%-------------------------------------------------------------
+
+%--------------------------------------
+%  Color Settings
+%--------------------------------------
+
+% define custom colors
+%\definecolor{MutedRed}{rgb}{0.97, 0.92, 0.92}
+%\definecolor{MutedGreen}{rgb}{0.92, 0.97, 0.92}
+%\definecolor{MutedBlue}{rgb}{0.92, 0.92, 0.97}
+%\definecolor{MutedBlack}{rgb}{0.95, 0.95, 0.95}
+
+%\definecolor{MediumRed}{rgb}{0.925, 0.345, 0.345}
+%\definecolor{MediumGreen}{rgb}{0.37, 0.7, 0.66}
+%\definecolor{MediumBlue}{rgb}{0.015, 0.315, 0.45}
+%\definecolor{MediumBlack}{rgb}{0.219, 0.259, 0.349}
+
+\definecolor{DarkBlue}{rgb}{0.05, 0.15, 0.35}
+
+% set beamer color themes
+\usecolortheme[named=DarkBlue]{structure}
+
+% customize colors for elements
+\setbeamercolor{titlelike}{parent=structure}
+%\setbeamercolor{block title}{fg=white,bg=MediumBlue}
+%\setbeamercolor{block body}{fg=black,bg=MutedBlue}
+%\setbeamercolor{block title example}{fg=white,bg=MediumGreen}
+%\setbeamercolor{block body example}{fg=black,bg=MutedGreen}
+%\setbeamercolor{block title alerted}{fg=white,bg=MediumRed}
+%\setbeamercolor{block body alerted}{fg=black,bg=MutedRed}
+% -----------------------------------------------------------
+% ブロックカラーの再定義（Nordic Style）
+% -----------------------------------------------------------
+
+% 1. Standard Block (Blue系): 落ち着いたスレートブルー
+\definecolor{NordicBlueTitle}{rgb}{0.23, 0.30, 0.45} % タイトル背景（濃い）
+\definecolor{NordicBlueBody} {rgb}{0.93, 0.94, 0.96} % 本文背景（極薄い）
+
+\setbeamercolor{block title}{fg=white, bg=NordicBlueTitle}
+\setbeamercolor{block body} {fg=black, bg=NordicBlueBody}
+
+% 2. Alert Block (Red系): 攻撃的でないブリックレッド
+\definecolor{NordicRedTitle}{rgb}{0.80, 0.40, 0.40} % タイトル背景（濃い）
+\definecolor{NordicRedBody} {rgb}{0.98, 0.92, 0.92} % 本文背景（極薄い）
+
+\setbeamercolor{block title alerted}{fg=white, bg=NordicRedTitle}
+\setbeamercolor{block body alerted} {fg=black, bg=NordicRedBody}
+
+% 3. Example Block (Green系): 知的なティールグリーン
+\definecolor{NordicGreenTitle}{rgb}{0.25, 0.55, 0.50} % タイトル背景（濃い）
+\definecolor{NordicGreenBody} {rgb}{0.92, 0.96, 0.94} % 本文背景（極薄い）
+
+\setbeamercolor{block title example}{fg=white, bg=NordicGreenTitle}
+\setbeamercolor{block body example} {fg=black, bg=NordicGreenBody}
+
+% -----------------------------------------------------------

@@ -1,0 +1,1702 @@
+%----------------------------------------------------------------------------------------
+%    PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass[aspectratio=43,xcolor=dvipsnames]{beamer}
+
+\usepackage{luatexja}
+\usepackage{luatexja-fontspec}
+
+
+% 日本語フォント設定（例）
+\setmainjfont{IPAexGothic}
+\setsansjfont{IPAexGothic}
+
+% 数式や欧文との相性改善（任意）
+\usepackage{amsmath, amssymb}
+\usepackage{bm} 
+
+\usetheme{SimplePlus}
+
+\usepackage{hyperref}
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{booktabs} % 表の罫線をきれいにするため
+\usepackage{xcolor}
+%----------------------------------------------------------------------------------------
+%    タイトル
+%----------------------------------------------------------------------------------------
+
+\title{Transformerのお勉強}
+ % Date, can be changed to a custom date
+
+%----------------------------------------------------------------------------------------
+% 　　目次
+%----------------------------------------------------------------------------------------
+\setbeamertemplate{caption}{\raggedright\insertcaption\par}
+\begin{document}
+
+\begin{frame}
+    % Print the title page as the first slide
+    \titlepage
+\end{frame}
+
+\begin{frame}{目次}
+    % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+    \tableofcontents
+\end{frame}
+
+% ==========================================
+% 研究背景
+% ==========================================
+\section{研究背景}
+\begin{frame}{研究背景 - 大規模言語モデルの発展と課題}
+    \begin{columns}[c]
+        \column{0.53\textwidth}
+        \begin{figure}[htbp]
+            \centering
+            \includegraphics[width=\linewidth]{LLM概要.png}
+            \caption{LLMの概要}
+        \end{figure}
+         % 既存の図があれば
+        % または概念図
+
+        \column{0.43\textwidth}
+        \vspace{-0.5em}
+        \scriptsize
+        \begin{block}{大規模言語モデルの高性能化}
+            \begin{itemize}
+                \item ディープラーニングや\\ビッグデータの恩恵を受け、\\大規模言語モデルは\\急速に発展している
+                \item 最新モデルは様々なタスクにおいて人間に匹敵する\\言語能力を示す
+                \item 多様なタスクで汎用的な\\言語能力を発揮
+            \end{itemize}
+        \end{block}
+        \vspace{-0.5em}
+        \scriptsize
+        \begin{alertblock}{モデル規模拡大による弊害}
+            \begin{itemize}
+                \item モデル規模(計算量・データ量・パラメータ数)が年々増加
+                \item 高性能化のために、モデル規模の拡大が必要である点が指摘される
+            \end{itemize}
+        \end{alertblock}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{研究背景 - 小規模言語モデル (SLM) の現在}
+    %\framesubtitle{BabyLM Challengeの台頭とアーキテクチャの画一化}
+    \vspace{0.5em}
+    \begin{columns}[c]
+        % --- 左カラム：背景（図とBabyLMの定義） ---
+        \column{0.50\textwidth}
+        \centering
+        % 画像サイズを少し抑えてスペース確保
+        \includegraphics[width=1\linewidth]{LLM学習データ2.png}
+        \vspace{-0.2em}
+        \scriptsize
+        \begin{block}{BabyLM Challenge [1]}
+            「1億語未満」のデータ制約化で効率的な\\言語獲得を目指すコンペティション
+            \begin{itemize}
+                \item \textbf{目的}: スケーリング則に依存しない、学習効率の高いモデルの追求
+            \end{itemize}
+        \end{block}
+
+        % --- 右カラム：課題（Transformer偏重） ---
+        \column{0.46\textwidth}
+        \vspace{0.2em} % 図とのバランス調整
+        \scriptsize
+        \begin{alertblock}{既存SLM研究の課題 [2][3]}
+            既存研究の多くが\\Transformerベースによる提案
+            
+            \vspace{0.3em}
+            \begin{itemize}
+                \item データの前処理や学習目標の工夫が中心
+                \item モデル自体の計算コストは依然として高い現状
+            \end{itemize}
+            
+            \vspace{0.2em}
+            \centering
+            $\Downarrow$
+            \vspace{0.2em}
+            
+            \textbf{低計算コストなモデル構造が必要}
+        \end{alertblock}
+    \end{columns}
+
+    \vspace{1em}
+
+    % --- 下段：本研究へのブリッジ（ブロックを使わずスペース節約） ---
+    \centering
+    \structure{\normalsize \textbf{本研究のアプローチ: \textcolor{blue}{リザバー計算 (Reservoir Computing)}}}
+
+    \vspace{1.5em}
+    \tiny
+    \raggedright
+    [1] Warstadt et al., Findings of the BabyLM Challenge, ACL, 2023.
+
+    [2] Kosmopoulou et al., Masked Diffusion Language Models, BabyLM Workshop, 2025.
+
+    [3] P\u{a}pu\c{s}oi et al., A Comparison of Elementary Baselines, BabyLM Workshop, 2025.
+\end{frame}
+
+\begin{frame}{研究背景 - リザバー計算 (RC) の概要}
+    \framesubtitle{低計算コストを特徴とするリカレントニューラルネットワーク}
+    \begin{columns}[c] % 上揃えにしたい場合は [t] に変更してください
+
+        % --- 左カラム ---
+        \column{.53\textwidth} % 余白を少し削って幅を広げました (0.45 -> 0.48)
+        \small 
+        \begin{figure}[bthp]
+            \centering
+            % 画像は \linewidth (カラム幅) に合わせるだけでOKです
+            % resizebox は不要（includegraphicsのwidth指定で十分）
+            \includegraphics[width=1\linewidth]{リザバー構造図.png}
+            \caption{リザバー構造図}
+        \end{figure}
+
+        % --- 右カラム ---
+        \column{.45\textwidth} % 余白を少し削って幅を広げました (0.45 -> 0.48)
+        %\small 
+        \scriptsize
+        \begin{itemize}
+            \item 入力層・リザバー層の重みは固定
+            \vspace{1em}
+            \item 出力層の重みのみを学習
+            \vspace{1em}
+            \item 計算コストを大幅に削減できる
+            \vspace{1em}
+            \item 学習の安定性や実装の簡便性を持つ
+        \end{itemize}
+    \end{columns}
+    
+\end{frame}
+
+\begin{frame}{研究背景 - リザバー計算を用いたSLMの可能性}
+    \framesubtitle{リザバー計算を用いた小規模言語モデルの先行研究(Ueda et al.)[4]}
+    \vspace{-0.5em}
+    \begin{columns}[T]
+        % --- 左カラム：成果 ---
+        \column{0.53\textwidth}
+        %\footnotesize
+        \scriptsize
+        \begin{exampleblock}{成果：Transformerに匹敵する性能}
+            \begin{itemize}
+                \item リザバー層のニューロン数を\\\textbf{16,384以上}に設定
+                \item ゼロから学習したGPT-2と同等、\\あるいは凌駕する文法能力(BLiMP)を実証
+            \end{itemize}
+        \end{exampleblock}
+
+        % --- 右カラム：課題 ---
+        \column{0.43\textwidth}
+        %\footnotesize
+        \scriptsize
+        \begin{alertblock}{課題：構造的な非効率性}
+            
+            \begin{enumerate}
+                \item \textbf{One-hot表現の課題}:
+                \begin{itemize}
+                    \scriptsize
+                    \item 語彙間の意味的類似性を表現不可
+                    \vspace{0.5em}
+                    \item 次元数増大に伴う\\リザバーの大規模化
+                \end{itemize}
+                \item \textbf{計算コストの課題}:\\
+                \scriptsize
+                低計算コストを特徴とするRCであっても、大規模なニューロン数($\ge 16,000$)は\\高い計算コストを伴う
+                
+            \end{enumerate}
+        \end{alertblock}
+    \end{columns}
+
+    \vspace{3.5em}
+    \tiny
+    [4]Ueda, R. et al., Syntactic Learnability of Echo State Neural Language Models at Scale, Proceedings of NAACL 2025, 2025.
+\end{frame}
+
+%------------------------------------------------
+%    手法
+%------------------------------------------------
+\section{手法}
+\begin{frame}{手法 - 提案モデルの概要}
+    %\framesubtitle{意味情報の導入によるモデルの劇的な小型化}
+    \vspace{-0.5em}
+    \begin{columns}[T]
+        % --- 左：目的とアプローチ（Why & What） ---
+        \column{0.52\textwidth}
+        \begin{block}{研究目的: 軽量化の検証}
+            \scriptsize
+            先行研究(Ueda et al.)の課題である\\「高い計算コスト」に対し、分散表現を\\導入することで、約1/16のサイズでの\\言語獲得を目指す
+            
+            \vspace{0.8em}
+            \centering
+            \footnotesize
+            \renewcommand{\arraystretch}{1.2}
+            \resizebox{\linewidth}{!}{%
+            \begin{tabular}{l | c | c}
+                \toprule
+                & \textbf{先行研究} & \textbf{本研究} \\
+                \midrule
+                \textbf{入力} & One-hot & \textbf{分散表現} \\
+                \textbf{規模} & $N_{\mathrm{rec}} \ge 16,384$ & \textbf{\textcolor{blue}{$N_{\mathrm{rec}}=1,000$}} \\
+                \bottomrule
+            \end{tabular}%
+            }
+            
+            \vspace{0.5em}
+            \raggedright
+            \scriptsize
+            $\Rightarrow$ 入力に意味情報を持たせることで、リザバー層の負担（記憶・識別）を軽減する。
+        \end{block}
+
+        % --- 右：モデルの構成（How） ---
+        \column{0.43\textwidth}
+        \begin{block}{モデル処理フロー}
+            \centering
+            \small
+            % フローの簡易表現
+            \textbf{単語} $w_t$ \\
+            $\downarrow$ \scriptsize{\textit{Word2Vec (事前学習)}}\\
+            \small \textbf{入力} $\bm{d}(t)$ \\
+            $\downarrow$ \scriptsize{\textit{Input・Reservoir (固定)}}\\
+            \small \textbf{状態} $\bm{r}(t)$ \\
+            $\downarrow$ \scriptsize{\textit{Readout (学習)}}\\
+            \small \textbf{予測} $\bm{y}(t) \approx \bm{d}(t+1)$
+        \end{block}
+
+        \vspace{0.5em}
+        \footnotesize
+        \structure{\textbf{構成の要点}}
+        \scriptsize
+        \begin{itemize}
+            \item \textbf{入力層}: 事前学習済みの\\分散表現を使用し、意味情報を入力(重み固定)
+            \item \textbf{リザバー層}: 入力を高次元\\非線形空間へ写像（重み固定）
+            \item \textbf{出力層}: 次の単語の分散表現を直接予測するように出力層の重みを学習
+        \end{itemize}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{手法 - 入力表現の高度化}
+    \vspace{1em}
+    %\framesubtitle{Word2Vec (Skip-gram) による意味情報の導入}
+    
+    入力層の次元削減および意味情報の付与を目的に、Word2Vec[5]のSkip-gramアルゴリズムを採用する
+
+    \vspace{1em}
+    \footnotesize
+    \begin{columns}[T]
+        \column{0.48\textwidth}
+        \begin{block}{Skip-gramの役割}
+            中心語から文脈語を予測する学習を通じ、\textbf{単語間の意味的類似性}をベクトル空間上の距離として取得
+            \vspace{0.5em}
+            \begin{center}
+                \footnotesize
+                「王」$-$「男」$+$「女」$\approx$「女王」
+            \end{center}
+        \end{block}
+
+        \column{0.48\textwidth}
+        \structure{\textbf{本研究における設定}}
+        \begin{itemize}
+            \item \textbf{パラメータ固定}:\\
+            RC学習中は固定し、1度の実行に書かる計算コストを抑制
+            \item \textbf{次元数 ($d_{\mathrm{emb}}$) の検証}:\\
+            \textbf{32, 64, 128} の3パターンで比較し、表現能力と計算負荷のトレードオフを明らかにする
+        \end{itemize}
+    \end{columns}
+    \vspace{3em}
+    \tiny
+    [5]Mikolov, T. et al., Efficient Estimation of Word Representations in Vector Space, Proceedings of ICLR, 2013.
+\end{frame}
+
+\begin{frame}{手法 - リザバー計算の定式化}
+    %\framesubtitle{状態更新と学習則}
+    \vspace{1em}
+    \begin{columns}[t]
+        % --- 左カラム：数式 ---
+
+        \column{.55\textwidth}
+        \footnotesize
+        \structure{1. 状態更新}
+        \begin{flalign*}
+            \bm{x}(t) &= (1 - \alpha)\bm{x}(t - 1) & \\
+                    &\quad + \alpha \Big( {W}^{\mathrm{in}} \bm{d}(t) + {W}^{\mathrm{rec}} \bm{r}(t - 1) \Big) &
+        \end{flalign*}
+
+        \vspace{-1.5em}
+        \begin{flalign*}
+            \bm{r}(t) &= \tanh(\bm{x}(t)) &
+        \end{flalign*}
+        
+        \vspace{1.5em}
+        \structure{2. 出力}
+        \begin{flalign*}
+            \bm{y}(t) &= W^{\mathrm{out}} \bm{r}(t) &
+        \end{flalign*}
+        
+        \vspace{1.5em}
+        \structure{3. 重み更新}
+        \begin{flalign*}
+            W^{\mathrm{out}}(t+1) &= W^{\mathrm{out}}(t) & \\
+                                &\quad + \frac{\mu}{B} \sum_{k=1}^{B} \bm{e}_k(t) \bm{r}_k(t)^\top &
+        \end{flalign*}
+        % --- 右カラム：変数定義 ---
+        \column{.4\textwidth}
+        \scriptsize
+        \begin{block}{変数定義}
+            \begin{itemize}
+                \item $\bm{d}(t)$: 入力ベクトル
+                \item $\bm{r}(t)$: リザバー状態ベクトル
+                \item $\bm{y}(t)$: 予測出力ベクトル
+                \item $\bm{e}_k(t)$: 予測誤差 ($\bm{y}_{\mathrm{true}} - \bm{y}$)
+                \item $\alpha$: 漏れ率
+                \item $\mu$: 学習率
+                \item $B$: ミニバッチサイズ
+            \end{itemize}
+        \end{block}
+        
+        \vspace{0.1em}
+        \begin{alertblock}{学習対象}
+            $W^{\mathrm{out}}$ のみ更新し、\\$W^{\mathrm{in}}, W^{\mathrm{rec}}$ はランダムかつスパースに固定する
+        \end{alertblock}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{手法 - 学習の効率化}
+    %\framesubtitle{語彙数 $V$ に依存しない出力層の設計}
+
+    %次単語の「カテゴリ分類」ではなく、\textbf{「分散表現の回帰」}を採用することで、出力層の計算量およびメモリ消費量を抜本的に低減する。
+
+    \begin{columns}[T]
+        \column{0.48\textwidth}
+        \begin{alertblock}{従来手法}
+            %\footnotesize
+            \scriptsize
+            \begin{itemize}
+                \item ターゲット：one-hotベクトル
+                \item 語彙数 $V$ に比例した出力行列が必要
+                \item 学習・推論共に $V$ 次元の演算を伴う
+                \item \textbf{計算量：$O(V)$} \hfill \textcolor{red}{\textbf{（高負荷）}}
+            \end{itemize}
+        \end{alertblock}
+
+        \column{0.48\textwidth}
+        \begin{exampleblock}{提案手法}
+            %\footnotesize
+            \scriptsize
+            \begin{itemize}
+                \item ターゲット：分散表現ベクトル
+                \item 埋め込み次元 $d$ にのみ依存
+                \item $d \ll V$
+                \item \textbf{計算量：$O(d)$} \hfill \textcolor{blue}{\textbf{（低負荷）}}
+            \end{itemize}
+        \end{exampleblock}
+    \end{columns}
+
+    \vspace{1.5em}
+    \centering
+    \large
+    $\Downarrow$
+    \vspace{0.5em}
+    
+    \small
+    \textbf{ミニバッチ学習を用いた逐次的な重み更新}により、\\
+    大規模なデータセットに対しても高速かつ省メモリな学習を実現
+\end{frame}
+
+\begin{frame}{手法 - データセット}
+    \framesubtitle{BabyLM Challenge 2025 Dataset}
+    
+    %人間の言語獲得過程を模した小規模かつ多様なデータセットを使用する。
+
+    \begin{columns}[t]
+        % --- 左カラム: Train ---
+        \column{.48\textwidth}
+        \centering
+        \footnotesize \textbf{トレーニングデータ}
+        \vspace{0.2em}
+        
+        \resizebox{\linewidth}{!}{%
+            \begin{tabular}{llr}
+                \toprule
+                \textbf{Dataset} & \textbf{Description} & \textbf{Words} \\ 
+                \midrule
+                \color{RoyalBlue}bnc\_spoken & \color{RoyalBlue}Dialogue & \color{RoyalBlue}7.8M\\
+                childes & Child-directed speech & 28.9M\\
+                gutenberg & Written English & 26.4M\\
+                open\_subtitles & Movie subtitles & 20.0M\\
+                \color{RoyalBlue}simple\_wiki & \color{RoyalBlue}Simple English & \color{RoyalBlue}14.7M\\
+                \color{RoyalBlue}switchboard & \color{RoyalBlue}Dialogue & \color{RoyalBlue}1.3M\\
+                \midrule
+                \textbf{Total} & & \textbf{99.0M}\\
+                \bottomrule
+            \end{tabular}%
+        }
+
+        % --- 右カラム: Test ---
+        \column{.48\textwidth}
+        \centering
+        \footnotesize \textbf{テストデータ}
+        \vspace{0.2em}
+
+        \resizebox{\linewidth}{!}{%
+            \begin{tabular}{llr}
+                \toprule
+                \textbf{Dataset} & \textbf{Description} & \textbf{Words} \\ 
+                \midrule
+                \color{RoyalBlue}bnc\_spoken & \color{RoyalBlue}Dialogue & \color{RoyalBlue}0.9M\\
+                childes & Child-directed speech & 2.7M\\
+                gutenberg & Written English & 2.4M\\
+                open\_subtitles & Movie subtitles & 1.9M\\
+                \color{RoyalBlue}simple\_wiki & \color{RoyalBlue}Simple English & \color{RoyalBlue}1.3M\\
+                \color{RoyalBlue}switchboard & \color{RoyalBlue}Dialogue & \color{RoyalBlue}0.1M\\
+                \midrule
+                \textbf{Total} & & \textbf{9.5M}\\
+                \bottomrule
+            \end{tabular}%
+        }
+    \end{columns}
+\end{frame}
+
+\begin{frame}{手法 - データ前処理}
+    \framesubtitle{語彙分布の適正化とノイズ除去}
+
+    以下のルールに基づき抽象化・正規化・除去を行う
+
+    \begin{columns}[T]
+        \column{0.55\textwidth}
+        \vspace{0.5em}
+        \scriptsize
+        \structure{\textbf{主な処理ルール}}
+        %\vspace{0.5em}
+        
+        \scriptsize
+        \begin{table}[h]
+            \centering
+            \begin{tabular}{l l}
+                \toprule
+                \textbf{カテゴリ} & \textbf{変換例 $\to$ 処理後} \\ 
+                \midrule
+                \textbf{抽象化} & https://... $\to$ \textbf{URL} \\
+                 & 1,000 / \$50 $\to$ \textbf{NUM} \\
+                 & 12:30 $\to$ \textbf{TIME} \\
+                \midrule
+                \textbf{正規化} & caf\'{e} $\to$ cafe \\
+                 & iPhone $\to$ iphone \\
+                \midrule
+                \textbf{除去} & *Emphasis* $\to$ (削除) \\
+                 & "Quote" $\to$ Quote \\
+                \bottomrule
+            \end{tabular}
+        \end{table}
+
+        \column{0.42\textwidth}
+        \vspace{-0.5em}
+        %\small
+        \scriptsize
+        %\vspace{0.5em}
+        \begin{alertblock}{文字長制限: $\le 13$文字}
+            \begin{table}[h]
+                \centering
+                \vspace{-0.5em}
+                \caption{Length $\ge 14$ の割合}
+                \begin{tabular}{lr}
+                    \toprule
+                    \textbf{指標} & \textbf{割合} \\ 
+                    \midrule
+                    \textbf{語彙数} & \textbf{6.03\%} \\
+                    \textbf{出現数} & \textbf{0.33\%} \\
+                    \bottomrule
+                \end{tabular}
+            \end{table}
+            語彙総数に対して、一定の割合を示す一方で、実際の出現回数が極めて少ない\\
+            \vspace{0.5em}
+            $\Rightarrow$ \textbf{学習効率の阻害要因}とみなし、これらを含む文ごとデータセットから除外する。
+        \end{alertblock}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{手法 - 前処理によるデータセットの変化}
+    % --- 上段：視覚的な変化（グラフ比較） ---
+    \vspace{-0.5em}
+    \begin{columns}[T]
+        % Left: Before Graph
+        \column{0.49\textwidth}
+        \centering
+        \textbf{\footnotesize 処理前}
+        \begin{figure}[h]
+            \centering\vspace{-0.5em}
+            % 高さを指定してレイアウト崩れを防止
+            \includegraphics[width=1\linewidth, height=3.5cm, keepaspectratio]{word_frequencies1.png}
+            \vspace{-1.5em}
+            \caption{\scriptsize 低頻出語・特殊記号を含む分布}
+        \end{figure}
+
+        % Right: After Graph
+        \column{0.49\textwidth}
+        \centering
+        \textbf{\footnotesize \textcolor{blue}{処理後}}
+        \begin{figure}[h]
+            \centering\vspace{-0.5em}
+            \includegraphics[width=1\linewidth, height=3.5cm, keepaspectratio]{word_frequencies2.png}
+            \vspace{-1.5em}
+            \caption{\scriptsize 低頻出語・特殊記号を排除した分布}
+            \scriptsize
+            ※ 縦軸が頻出度、横軸が単語長
+        \end{figure}
+
+    \end{columns}
+
+    \vspace{-0.5em}
+
+    % --- 下段：定量・定性的な変化（表・要約） ---
+    \begin{columns}[c]
+        % Left: 統計テーブル
+        \column{0.52\textwidth}
+        \begin{table}[h]
+            \centering
+            \scriptsize % 表を少し小さくして収める
+            \caption{\scriptsize 処理前後の統計比較}
+            \vspace{-0.5em}
+            \begin{tabular}{l | r | r}
+                \toprule
+                \textbf{項目} & \textbf{処理前} & \textbf{\textcolor{blue}{処理後}} \\
+                \midrule
+                総単語数 & 26.9M & \textbf{25.1M} \\
+                \textbf{語彙数} & \textbf{520k} & \textbf{\textcolor{blue}{238k}} \\
+                平均文字長 & 8.21 & \textbf{7.45} \\
+                最大文字長 & 156 & \textbf{13} \\
+                \bottomrule
+            \end{tabular}
+        \end{table}
+
+        % Right: 処理の要約
+        \column{0.45\textwidth}
+        \vspace{1.5em} % 表との高さ合わせ
+        \begin{alertblock}{\scriptsize 処理の要点}
+            \scriptsize
+            \begin{enumerate}
+                \item 最大文字長を13へ制限し、低頻度な長大語彙を排除
+                \item 語彙数を約\textbf{54\%削減}し、モデルの出力次元数を大幅に圧縮
+            \end{enumerate}
+        \end{alertblock}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{手法 - 評価手法(概要)}
+    %\framesubtitle{言語モデルとしての性能を多角的に検証}
+    \begin{columns}[t] % 上揃えにしたい場合は [t] に変更してください
+
+        % --- 左カラム ---
+        \column{.43\textwidth} % 余白を少し削って幅を広げました (0.45 -> 0.48)
+        \small
+        \begin{block}{1. 次単語予測 (Perplexity)}
+            \centering
+            \textbf{予測の正確さ・不確実性}
+            \vspace{-0.5em}
+            \begin{figure}[bthp]
+            %\centering
+            % 画像は \linewidth (カラム幅) に合わせるだけでOKです
+            % resizebox は不要（includegraphicsのwidth指定で十分）
+            \includegraphics[width=\linewidth]{PPL概要.png}
+            %\caption{次単語予測}
+            \end{figure}
+            \raggedright
+            \footnotesize
+            \begin{itemize}
+                \item モデルが予測する単語分布の不確実性を表す
+                \item 値が\textbf{小さい}ほど、予測性能が高い
+            \end{itemize}
+        \end{block}
+
+        % --- 右カラム ---
+        \column{.53\textwidth} % 余白を少し削って幅を広げました (0.45 -> 0.48)
+        \small
+        \begin{exampleblock}{2. 文法性判断 (BLiMP)}
+            \centering
+            \textbf{文法知識の獲得有無}
+            \vspace{-0.5em}
+            \begin{figure}[bthp]
+            \centering
+            % 画像は \linewidth (カラム幅) に合わせるだけでOKです
+            % resizebox は不要（includegraphicsのwidth指定で十分）
+            \includegraphics[width=\linewidth]{BLiMP2.png}
+            %\caption{文法性判断}
+            \end{figure}
+            \raggedright
+            \footnotesize
+            \begin{itemize}
+                \item モデルの文法理解力を測る\\ベンチマーク
+                \item 正解率が\textbf{高い}ほど、文法理解が深い
+            \end{itemize}
+        \end{exampleblock}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{手法 - 評価手法 - 次単語予測精度 (Perplexity)}
+    %\framesubtitle{分散表現の類似度に基づく確率分布の生成}
+    \small
+    予測ベクトル $\hat{\bm{y}}(t)$ と各語彙が持つ分散表現 $\bm{v}$ とのコサイン類似度に基づき確率分布を算出する
+    \vspace{0.5em}
+    \begin{columns}[t]
+        % --- 左：数式定義 ---
+        \column{0.55\textwidth}
+        \footnotesize
+        \structure{1. 類似度による確率定義}
+        \begin{align*}
+            p(w_t | \bm{r}(t)) &= \frac{\exp \left( \frac{\operatorname{cos\_sim}(\hat{\bm{y}}(t), \bm{v}_{t})}{\tau} \right)}{\sum_{k=1}^{|V|} \exp \left( \frac{\operatorname{cos\_sim}(\hat{\bm{y}}(t), \bm{v}_{k})}{\tau} \right)}
+        \end{align*}
+        
+        \structure{2. Perplexity (PPL) の算出}
+        \begin{align*}
+            \mathrm{PPL}(W) &= \exp \left( - \frac{1}{N} \sum_{t=1}^{N} \log p(w_t | \bm{r}(t)) \right)
+        \end{align*}
+
+        % --- 右：変数定義とプロセス ---
+        \column{0.42\textwidth}
+        \vspace{-1em}
+        \scriptsize
+        \begin{block}{変数定義}
+            \begin{itemize}
+                \item $\hat{\bm{y}}(t)$: 時刻 $t$ における\textbf{予測ベクトル}
+                \item $\bm{v}_{t}$: 正解単語 $w_t$ の\textbf{分散表現}
+                \item $\bm{v}_{k}$: 語彙集合 $V$ 内の $k$ 番目の\textbf{分散表現}
+                \item $\tau$: 温度パラメータ
+                \item $N$: テストデータの総単語数-10
+            \end{itemize}
+        \end{block}
+    \end{columns}
+    \vspace{1em}
+    \hrule
+    \vspace{0.5em}
+    \scriptsize
+    \structure{\textbf{評価プロセス}}
+        \begin{itemize}
+            \item \textbf{文脈長}: 10単語
+            \item \textbf{評価対象}:
+            $t=1 \sim 10$ は内部状態の更新のみを行い、$t=11$ 以降の単語をPPL計算の対象とする。
+        \end{itemize}
+\end{frame}
+
+\begin{frame}{手法 - 評価手法 - 文法性判断 (BLiMP)[5]}
+    %\framesubtitle{Minimal Pairを用いた言語現象の習得度評価}
+    \vspace{.5em}
+    文法的に正当な文 ($W_{\mathrm{good}}$) と誤った文 ($W_{\mathrm{bad}}$) のペアに対し、モデルの\textbf{文スコア}を比較して判定を行う
+
+    %\vspace{1em}
+
+    \begin{columns}[T]
+        % --- 左：スコア定義 ---
+        \column{0.55\textwidth}
+        \small
+        \begin{block}{文スコア}
+            文全体を通しての対数尤度の総和
+            \vspace{-0.5em}
+            \begin{align*}
+                \operatorname{Score}(W) = \sum_{t=1}^{T-1} \log p(w_{t+1} \mid \bm{r}(t))
+            \end{align*}
+            \vspace{-0.5em}
+            \scriptsize
+            \begin{itemize}
+                \item \textbf{$T$}: 評価対象の文脈長 (文の単語数)
+                \item $p(\cdot)$: PPLと同様に類似度に基づき算出
+            \end{itemize}
+        \end{block}
+
+        % --- 右：判定基準 ---
+        \column{0.41\textwidth}
+        \small
+        \begin{exampleblock}{判定基準}
+            正しい文法知識があれば、正当な文の尤度が高くなる
+            
+            \vspace{0.5em}
+            \centering
+            \textbf{正解条件:}
+            \begin{align*}
+                \operatorname{Score}(W_{\mathrm{good}}) > \operatorname{Score}(W_{\mathrm{bad}})
+            \end{align*}
+        \end{exampleblock}
+    \end{columns}
+
+    \vspace{1em}
+    \hrule
+    \vspace{0.5em}
+
+    \scriptsize
+    \textbf{評価対象データ}:\\
+    英語の\textbf{形態論・統語論・意味論}に基づく12種類の言語現象（全67データセット）\\
+    各データセットは1,000組のミニマルペアから構成され、現象ごとの正解率を集計する
+    \vspace{3em}
+    \tiny
+    [5]Warstadt, A. et al., BLiMP: The Benchmark of Linguistic Minimal Pairs for English, MIT Press, 2020.
+\end{frame}
+
+%------------------------------------------------
+%  結果と考察
+%------------------------------------------------
+\section{結果と考察}
+
+\begin{frame}{結果と考察(1) - Perplexity}
+    %\framesubtitle{予測タスクにおける「情報の圧縮」と「忘却」の重要性}
+
+    \begin{columns}[t]
+        % --- 左：結果の表 ---
+        \column{0.51\textwidth}
+        \vspace{-2em}
+        \scriptsize
+        \begin{table}[h]
+            \caption{$\rho$ および$D_{\mathrm{emb}}$ の変化に伴うPPL}
+            \centering
+            \vspace{-.3em}
+            \tabcolsep=3pt
+            \renewcommand{\arraystretch}{1.2}
+            \resizebox{\linewidth}{!}{%
+            \begin{tabular}{l | cccccc}
+                \hline
+                $\rho$ & 0.80 & 0.85 & 0.90 & 0.95 & 1.00 & 1.05 \\
+                \hline
+                $D_{emb}$ & \multicolumn{6}{c}{平均 Perplexity (PPL)} \\
+                \hline\hline
+                32  & 7849.8 & \color{blue}\underline{\textbf{7849.1}} & 7850.7 & 7854.9 & 7862.0 & 7871.7 \\
+                64  & 9226.5 & \color{blue}\underline{\textbf{9223.9}} & 9224.0 & 9227.2 & 9233.8 & 9243.8 \\
+                128 & \color{blue}\underline{\textbf{10464.8}}
+                & 10467.4 & 10471.3 & 10476.3 & 10482.2 & 10488.9 \\
+                \hline
+            \end{tabular}%
+            }
+            \\ \vspace{0.5em} \tiny\raggedright
+            ※ 青で示すのは、各$D_{\mathrm{emb}}$における最良の結果\\
+            ※ 値が小さいほど性能が高いことを示す\\
+        \end{table}
+        \vspace{-0.5em}
+        \hrule
+        \vspace{0.5em}
+        \scriptsize
+        例: anymore , they re not trying . and we will (次単語: give)\\
+        \vspace{0.3em}
+        $D_{\mathrm{emb}}=32, \rho=0.85$\\ (予測単語: [ \alert{even} ] 、 CosSim: 0.9685)\\
+        \vspace{0.3em}
+        $D_{\mathrm{emb}}=64, \rho=0.85$\\ (予測単語: [ \alert{just} ] 、CosSim:0.9504)\\
+        \vspace{0.3em}
+        $D_{\mathrm{emb}}=128, \rho=0.80$\\ (予測単語: [ \alert{,}  ] 、CosSim: 0.9467)\\
+        
+        \vspace{0.5em}
+        \begin{block}{\textbf{最良設定}: $D_{\mathrm{emb}}=32, \rho=0.85$}
+            低次元かつ、やや短期記憶寄りの設定で最小値を示す
+        \end{block}
+
+        % --- 右：要因分析 ---
+        \column{0.45\textwidth}
+        %\centering
+        \scriptsize
+        \structure{\textbf{事象1: $D_{\mathrm{emb}}$の増加に伴う単調悪化}}
+        \begin{itemize}
+            \item 入力空間の疎性が特徴抽出の\\精度を著しく損なわせた可能性
+            \item  $D_{\mathrm{emb}}\uparrow$ に伴うコサイン類似度の低下は、予測ベクトルが語彙の意味内容を喪失し、出現頻度の高い「記号」へ出力が収束したことを裏付ける
+        \end{itemize}
+
+        \vspace{0.1em}
+        
+        \structure{\textbf{事象2: $\rho$ の増加に伴う悪化}}
+        \begin{itemize}
+            \item 高 $\rho$ 条件下での過去情報による影響が、直近の文脈依存的な予測を阻害するノイズとなった
+            \item $\rho=0.85$ 以降の精度悪化は、リザバーの保持情報量が読み出し層の最適処理範囲を超過したことことを示している可能性がある
+        \end{itemize}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{結果と考察(2) - BLiMP全体傾向}
+    \begin{columns}[T]
+        % --- 左：結果の表 ---
+        \column{0.48\textwidth}
+        \scriptsize
+        \begin{table}[h]
+            \caption{$\rho$ と$D_{\mathrm{emb}}$のBLiMP精度}
+            \centering
+            \vspace{-1.5em}
+            \tabcolsep=3pt
+            \renewcommand{\arraystretch}{1.2}
+            \resizebox{\linewidth}{!}{%
+            \begin{tabular}{l | cccccc}
+                \hline
+                $\rho$ & 0.80 & 0.85 & 0.90 & 0.95 & 1.00 & 1.05 \\
+                \hline
+                $D_{emb}$ & \multicolumn{6}{c}{正解率 (\%)} \\
+                \hline\hline
+                32  & 55.68 & 55.57 & 55.48 & 55.49 & \color{blue}\underline{\textbf{55.50}} & \color{blue}\underline{\textbf{55.53}} \\
+                64  & \color{blue}\underline{\textbf{56.05}} & \color{blue}\underline{\textbf{55.97}} & \color{blue}\underline{\textbf{55.77}} & \color{blue}\underline{\textbf{55.51}} & 55.26 & 54.93\\
+                128 & 55.07 & 55.01 & 54.92 & 54.82 & 54.70 & 54.66 \\
+                \hline
+            \end{tabular}%
+            }
+            \\ \vspace{0.5em} \tiny\raggedright
+            ※ 青で示すのは、各$\rho$における最良の結果
+        \end{table}
+        \vspace{0.3em}
+        \begin{block}{\textbf{最良設定}: $D_{\mathrm{emb}}=64, \rho=0.80$}
+            PPLの最適な次元数($D_{\mathrm{emb}}=32$)より詳細な特徴表現($D_{\mathrm{emb}}=64$)が\\有効であった
+        \end{block}
+
+        % --- 右：要因分析（PPLスライドに合わせた形式） ---
+        \column{0.48\textwidth}
+        \scriptsize
+        \structure{\textbf{事象1: 情報の精細化と限界}}
+        \begin{itemize}
+            \item $\rho<1.0$の条件下において$D_{\mathrm{emb}}=32\rightarrow64$は精度向上に寄与した
+            \item 一方で、全$\rho$において$D_{\mathrm{emb}}=64\rightarrow128$は精度低下を招く
+            \item 適度な情報の精細化は表現能力を高める一方で、過度に行うと入力空間が疎になり、学習効率が悪化した可能性が示唆される
+        \end{itemize}
+
+        \vspace{0.5em}
+        \scriptsize
+        \structure{\textbf{事象2: 記憶容量のトレードオフ}}
+        \begin{itemize}
+            \item $\rho$ の変化に対し、全体平均スコアの変動は極めて小さい
+            \item 「短期記憶が有利に働くタスク」と「長期記憶が有利に働くタスク」の精度変動が互いに打ち消し合っているため（次スライドで詳述）
+        \end{itemize}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{結果と考察(3) - BLiMP言語現象別傾向}
+    %\framesubtitle{言語現象によって求められる「記憶の長さ」の矛盾}
+
+    %スペクトル半径 $\rho$ を大きくすると「長期記憶」が保持されるが、同時に「古い情報の干渉」を招くため、タスクの性質により効果が逆転する。
+
+    \vspace{0.1em}
+
+    \begin{columns}[T]
+        \column{0.48\textwidth}
+        \begin{block}{長期記憶有意のタスク \\($\rho \uparrow \Rightarrow$ 精度向上)}
+            \scriptsize
+            \textbf{例: Anaphor Agreement (照応形の一致)}\\
+            \vspace{1em}
+            \tiny
+            The \alert{senators} ... hurt \alert{themselves}. (適切)\\
+            The \alert{senators} ... hurt {\color{blue}{himself}}. (不適切)\\
+            ※先行詞と代名詞が数・性などにおいて一致するか
+            \vspace{0.5em}
+            \scriptsize
+            \begin{itemize}
+                \item \textbf{傾向}: $\rho=0.8 \to 1.05$ で精度向上 \\ ($47.4\% \to 54.0\%$)
+                \item 先行詞と代名詞の距離が遠いため、\\情報を長く保持できる高い $\rho$ が\\有利に働く
+            \end{itemize}
+        \end{block}
+
+        \column{0.48\textwidth}
+        \begin{block}{短期記憶有意のタスク \\($\rho \uparrow \Rightarrow$ 精度低下)}
+            \scriptsize
+            \textbf{例: NPI Licensing (否定極性項目)}\\
+            \vspace{1em}
+            \tiny
+            \alert{No} students have \alert{ever} been there. (適切)\\
+            Students have {\color{blue}{ever}} been there. (不適切)\\
+            ※everなどの単語が否定文のみで使用されているか
+            \vspace{0.5em}
+            \scriptsize
+            \begin{itemize}
+                \item \textbf{傾向}: $\rho=0.8 \to 1.05$ で精度低下 \\ ($42.7\% \to 37.0\%$)
+                \item 高い $\rho$ では, 古い文脈がノイズとして残り、局所的な判断を阻害した
+            \end{itemize}
+        \end{block}
+    \end{columns}
+    \vspace{1.5em}
+    \centering
+    \large
+    $\Downarrow$
+
+    \vspace{0.5em}
+    %\centering
+    \small
+    固定された単一の $\rho$ で、「短期記憶を要するタスク」と「長期記憶を要するタスク」を網羅することには構造的な限界がある
+\end{frame}
+
+% ==========================================
+% まとめ
+% ==========================================
+\section{まとめ}
+\begin{frame}{まとめ - 提案モデルの特性と限界}
+    \begin{columns}[T]
+        % --- 左：PPLの議論 ---
+        \column{0.32\textwidth}
+        \begin{block}{1. 予測性能(PPL)の考察}
+            \scriptsize
+            \begin{itemize}
+                \item 「過度な詳細化($D_{\mathrm{emb}}=128$)」は\\学習の妨げとなる\\可能性が示唆される
+                \item $\rho \uparrow$ に伴うPPL悪化は、遠い過去情報が残り、単語予測における「干渉」として作用した可能性が\\示唆される
+            \end{itemize}
+        \end{block}
+
+        % --- 中央：BLiMP全体傾向 ---
+        \column{0.32\textwidth}
+        \begin{alertblock}{2. 言語性能(BLiMP)全体像}
+            \scriptsize
+            \begin{itemize}
+                \item \textbf{スコアの停滞}: 
+                全$\rho$において平均正解率は55\%前後で飽和
+                \item $\rho$ の変化に対する平均値の変動が極めて小さいのは、タスク間の精度変動が互いに打ち消し合うため
+            \end{itemize}
+        \end{alertblock}
+
+        % --- 右：BLiMPタスク別・限界 ---
+        \column{0.32\textwidth}
+        \begin{exampleblock}{3. 言語現象別の相反関係}
+            \scriptsize
+            \begin{itemize}
+                \item $\rho\uparrow$に伴い精度が向上する長期記憶優位のタスクと精度が低下する短期記憶優位のタスクが確認された。また、評価指標によって適切な次元数も異なる。
+                \item 単一の $\rho$ で「短期記憶」と「長期記憶」を両立させることは困難
+            \end{itemize}
+        \end{exampleblock}
+    \end{columns}
+
+    \vspace{1em}
+    \centering
+    \scriptsize
+    \textbf{結論}: リザバーの物理的特性（$\rho$）は言語現象ごとにトレードオフを引き起こす。\\
+    単一設定での全タスク網羅は困難であり、複数時間スケールの統合が必要
+\end{frame}
+
+\begin{frame}{今後の展望}
+    \vspace{0.5em}
+    \scriptsize
+    \begin{block}{未検証のパラメータの変更}
+        リーク率$\alpha$、ミニバッチサイズ$B$、学習率$\mu$など、本研究において固定していた\\パラメータについて検証する
+    \end{block}
+    \vspace{0.5em}
+    \scriptsize
+    \begin{alertblock}{Deep Reservoir ・Attention Reservoir}
+        \begin{itemize}
+            \item 多層リザバー: 異なる時間スケール（$\rho$）を持つ層を重ねることで、短期記憶優位のタスクと長期記憶優位のタスクに対する頑健性を示すことが期待される
+            \item アテンション付きリザバー: アテンション機構の導入により、リザバー内部状態からタスクに重要な過去情報を動的に抽出することが期待される
+        \end{itemize}
+    \end{alertblock}
+    \vspace{0.5em}
+    \scriptsize
+    \begin{exampleblock}{Transformerの実装}
+        現在の主流であるTransformerの実装・比較を行い、データ制約下および低リソース環境における提案モデルの優位性を明確化する
+    \end{exampleblock}
+\end{frame}
+
+% ==========================================
+% おまけ
+% ==========================================
+\section{Transformerについて}
+\begin{frame}{Transformer}
+    \begin{columns}[c]
+        \column{0.45\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{transformer概要.png}
+        \end{figure}
+        \column{0.45\textwidth}
+        \begin{block}{モデル}
+            \begin{itemize}
+                \item RNNやCNNを使用せず、Attentionのみで構成される
+                \item 現行のLLMの多くがTransformerをベースとしている
+                \item 翻訳タスクを解くモデルとして登場
+            \end{itemize}
+        \end{block}
+    \end{columns}
+    \vspace{0.7em}
+    \tiny
+    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{Transformer}
+    \framesubtitle{Encoder}
+    \begin{columns}[c]
+        \column{0.4\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.6\linewidth]{Encoder.png}
+        \end{figure}
+        \column{0.6\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Scaled Dot and Multi Head.png}
+        \end{figure}
+    \end{columns}
+    \vspace{3em}
+    \tiny
+    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{Transformer}
+    \framesubtitle{Encoder - Input Enbedding}
+    \begin{columns}[T]
+        \column{0.3\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.9\linewidth]{Encoder.png}
+        \end{figure}
+
+        \column{0.55\textwidth}
+        \footnotesize
+        \begin{block}{Input Embedding(埋め込み)}
+            総トークン数をVとして、V次元のOne-hotベクトルを埋め込みに変換する行列Eを定義
+            \begin{align*}
+                E \in \mathbb{R}^{V \times d_{\text{model}}}
+            \end{align*}
+            t=[0,0..,1,..,0,0]を,第k成分のみ1で、他は全て0のOne-hotベクトルとする
+            \begin{align*}
+                tE = d
+            \end{align*}
+            \bm{d}はEのk行目と一致する横ベクトル
+        \end{block}
+    \end{columns}
+    \vspace{1.5em}
+    \tiny
+    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{Transformer}
+    \framesubtitle{Encoder - Positional Encoding}
+        \begin{columns}[c]
+        % --- 左---
+        \column{0.25\textwidth}
+        \begin{figure}[bthp]
+        %\centering
+        \includegraphics[width=1\linewidth]{Encoder.png}
+        \end{figure}
+
+        % --- 中央 ---
+        \column{0.4\textwidth}
+        \begin{figure}[bthp]
+        %\centering
+        \includegraphics[width=1\linewidth]{Positional Encoding.png}
+        \end{figure}
+
+        % --- 右 ---
+        \column{0.32\textwidth}
+        \scriptsize
+        \begin{block}{位置符号}
+            入力埋め込みベクトル\bm{d}に位置符号と呼ばれるベクトルを加算
+            
+            \rightarrow 語順の情報が付与される
+        \end{block}
+        \vspace{1em}
+        正弦関数と余弦関数を用いて位置ごとに異なる固有のパターンをもつベクトルを生成し、\bm{d}に直接加算するらしい
+
+    \end{columns}
+    \vspace{2em}
+    \tiny
+    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{Transformer}
+    \framesubtitle{Encoder - Scaled Dot-Product Attention}
+    \begin{columns}[T]
+        \vspace{-1em}
+        \column{0.3\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.9\linewidth]{Scaled Dot Product Attention.png}
+        \end{figure}
+        \vspace{-1em}
+        \begin{table}[]
+            \tiny
+            \begin{tabular}{lll}
+                \hline
+                \textbf{変数} & \textbf{名称} & \textbf{イメージ・定義} \\ \hline
+                $Q\in \mathbb{R}^{n \times d_{k}}$ & Query &  「何に注目したいか」 \\
+                $K\in \mathbb{R}^{n \times d_{k}}$ & Key & 「どのような情報を持っているか」 \\
+                $V\in \mathbb{R}^{n \times d_{v}}$ & Value & 実際に抽出される「情報」 \\
+                $n$ & シーケンス長 & 入力トークン数 \\
+                $d_k$ & 次元数 & $Q, K$ の次元数 \\
+                $d_v$ & 次元数 & $V$ の次元数 \\
+                $\text{softmax}$ & 関数 & 正規化する処理 \\ \hline
+            \end{tabular}
+        \end{table}
+        \column{0.5\textwidth}
+        \tiny
+        \[
+        \text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
+        \]
+        \vspace{0.5em}
+        {\tiny \textbf{処理フロー}}
+        \begin{itemize}
+            \item \textbf{1. MatMul}: $Q$と$K$の内積により単語間の相関（スコア）を算出
+            \item \textbf{2. Scale}: $\sqrt{d_k}$で除算。$d_k$増大による勾配消失を防止
+            \item \textbf{3. Softmax}: スコアを合計1の確率（重み）に正規化
+            \item \textbf{4. MatMul}: 重みに基づき$V$を足し合わせ、文脈を集約
+        \end{itemize}
+    \end{columns}
+    \vspace{2.5em}
+    \tiny
+    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{Transformer}
+    \framesubtitle{Encoder - Scaled Dot-Product Attention}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.8\linewidth]{Scaled Dot 1.png}
+    \end{figure}
+    \footnotesize
+    Query(注目したい単語)と各Key(文中の各単語)がどれだけ関連しているか(類似度)を算出
+    
+    \vspace{1.5em}
+    \tiny
+    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{Transformer}
+    \framesubtitle{Encoder - Scaled Dot-Product Attention}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.8\linewidth]{Scaled Dot 2.png}
+    \end{figure}
+    \footnotesize
+    Queryと各Keyの内積を正規化したものを「対象の単語が周りの各単語をどれほど注視しているか」の指標とみなす(=注意重み)
+
+    \vspace{1.5em}
+    \tiny
+    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{Transformer}
+    \framesubtitle{Encoder - Scaled Dot-Product Attention}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.8\linewidth]{Scaled Dot 3.png}
+    \end{figure}
+    \footnotesize
+    注意重みで重み付けされたValueの和を計算することで「私」のベクトルに周辺の単語情報が付加される
+
+    \vspace{1.5em}
+    \tiny
+    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{Transformer}
+    \framesubtitle{Encoder - Scaled Dot-Product Attention}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.8\linewidth]{Scaled Dot 4.png}
+    \end{figure}
+    \footnotesize
+    $x_1$、$x_2$、$x_3$の更新は独立しているため並列化可能
+    
+    \rightarrow $x_1$を行列Xの1列目の要素のようにみなすとX全体の更新をAttention(Q,K,V)で行える
+
+    \vspace{1em}
+    \tiny
+    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{Transformer}
+    \framesubtitle{Encoder - Multi-Head Attention}
+    \vspace{-2.3em}
+    \begin{columns}[c]
+        \column{0.3\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Multi Head Attention.png}
+        \end{figure}
+        \column{0.7\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.9\linewidth]{Multi Head 1.png}
+        \end{figure}
+        \centering
+        \scriptsize
+        $\text{Multi Head}(Q,K,V)=\text{Concat}(\text{head}_{1},,,\text{head}_{h})W^{o}$
+        $\text{head}_{i}=\text{Attentio}(QW^{Q}_{i},KW^{K}_{i},VW^{V}_{i})$
+        
+        \vspace{0.5em}
+        \tiny
+        %\small
+        \begin{tabular}{lll}
+            \hline
+            \textbf{変数} & \textbf{名称} \\ \hline
+            $W^{Q}, W^{K}\in \mathbb{R}^{d_{model} \times d_{k}}$ & Q, Kの投影用の重み  \\
+            $W^{V}\in \mathbb{R}^{d_{model} \times d_{v}}$ & Vの投影用の重み \\
+            $W^{O}\in \mathbb{R}^{hd_v \times d_{model}}$ & 出力統合用の重み \\
+            $d_{k}, d_{v}$ & 各ヘッドの次元数 \\
+            $d_{model}$ & 埋め込みベクトルの次元数 \\
+            $h $ & ヘッド数 \\ \hline
+
+        \end{tabular}
+    \end{columns}
+    \vspace{0.1em}
+    \tiny
+    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{Transformer}
+    \framesubtitle{Encoder - Add \& Norm}
+    \begin{columns}[T]
+        \column{0.3\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.9\linewidth]{Encoder.png}
+        \end{figure}
+
+        \column{0.65\textwidth}
+        \footnotesize
+        \begin{block}{Residual Connection \& Layer Norm}
+            各サブレイヤの出力を以下の処理を行う
+            \begin{align*}
+                \text{Output} = \text{LayerNorm}(x + \text{Sublayer}(x))
+            \end{align*}
+            \begin{itemize}
+                \item \textbf{Add (Residual)}: 前の層の出力$\text{Sublayer}(x)$へ入力 $x$ を直接足す
+                
+                \rightarrow 勾配消失を防ぎ、深い層でも学習が安定
+                \item \textbf{LayerNorm}: 特徴ベクトルの平均を0、分散を1に正規化
+                
+                \rightarrow 学習が高速化・安定化
+            \end{itemize}
+        \end{block}
+    \end{columns}
+    \vspace{0.5em}
+    \tiny
+    [7] Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{Transformer}
+    \framesubtitle{Encoder - Feed Forward Network}
+    \begin{columns}[T]
+        \column{0.3\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.9\linewidth]{Encoder.png}
+        \end{figure}
+
+        \column{0.65\textwidth}
+        \footnotesize
+        \begin{block}{Position-wise Feed Forward (FFN)}
+            \begin{align*}
+                \text{FFN}(x) = \max(0, xW_1 + b_1)W_2 + b_2
+            \end{align*}
+            \textbf{変数・次元数定義：}
+            \begin{itemize}
+                \item $W_1 \in \mathbb{R}^{d_{\text{model}} \times d_{ff}}$ (512 $\to$ 2048)
+                \item $W_2 \in \mathbb{R}^{d_{ff} \times d_{\text{model}}}$ (2048 $\to$ 512)
+            \end{itemize}
+            Attention層から出力された関係性情報を、非線形変換し、より抽象度の高い特徴を抽出する
+        \end{block}
+    \end{columns}
+    \vspace{0.5em}
+    \tiny
+    [7] Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+% ==========================================
+% 参考資料
+% ==========================================
+\setbeamertemplate{frametitle continuation}{}
+\begin{frame}[allowframebreaks]{参考文献}
+    \setbeamertemplate{bibliography item}[text]
+    \scriptsize
+    \begin{thebibliography}{99}
+        %\bibitem{item1}
+        %Kaplan, J. et al., Scaling Laws for Neural Language Models, arXiv preprint, arXiv:2001.08361, 2020.
+        %\bibitem{item2}
+        %Hoffmann, J. et al., Training Compute-Optimal Large Language Models, arXiv preprint, arXiv:2203.15556, 2022.
+        %\bibitem{item3}
+        %Gunasekar, S. et al., Textbooks Are All You Need, arXiv preprint, arXiv:2306.11644, 2023.
+        \bibitem{item1}
+        Warstadt, A. et al., Findings of the BabyLM Challenge: Sample-Efficient Pretraining on Developmentally Plausible Corpora, Association for Computational Linguistics, 2023.
+        \bibitem{item2}
+        Kosmopoulou, D. et al., Masked Diffusion Language Models with Frequency-Informed Training, Proceedings of the First BabyLM Workshop, Association for Computational Linguistics, 2025.
+        \bibitem{item3} P\u{a}pu\c{s}oi, R. et al., A Comparison of Elementary Baselines for BabyLM, Proceedings of the First BabyLM Workshop, Association for Computational Linguistics, 2025.
+        \bibitem{item4}
+        Ueda, R. et al., Syntactic Learnability of Echo State Neural Language Models at Scale, Proceedings of NAACL 2025, 2025.
+        \bibitem{item5}
+        Warstadt, A. et al., BLiMP: The Benchmark of Linguistic Minimal Pairs for English, MIT Press, 2020.
+        %\bibitem{item9}
+        %Jaeger, H, A tutorial on training reccurent neural networks, covering BPTT, RTRL, EKF and ”echo state network” approach, GMD Report, vol.159, pp.1–46, 2002.
+        \bibitem{item6}
+        Mikolov, T. et al., Efficient Estimation of Word Representations in Vector Space, Proceedings of ICLR, 2013.
+        \bibitem{item7}
+        Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \end{thebibliography}
+\end{frame}
+
+% ==========================================
+%　補足資料
+% ==========================================
+\begin{frame}{補足資料 - Skipgramのパラメータ設定}
+    \begin{table}[htbp]
+    \centering
+    \caption{Word2Vecの学習パラメータ}
+    \scriptsize
+        \begin{tabular}{lll}
+        \hline \hline
+        パラメータ & 意味 & 設定値 \\
+        \hline
+        Algorithm & 学習アルゴリズム & Skip-gram \\
+        $D_{\mathrm{emb}}$ & ベクトルの次元数 & 32, 64, 128 \\
+        $\mathrm{window}$ & コンテキストの窓幅 & 3 \\
+        $\mathrm{min\_count}$ & 出現頻度の閾値 & 5 \\
+        $\eta$ & 初期学習率 & $5.0 \times 10^{-2}$ \\
+        $\eta_{\mathrm{min}}$ & 最小学習率 & $1.0 \times 10^{-3}$ \\
+        Epochs & 学習エポック数 & 1 \\
+        \hline \hline
+        \end{tabular}
+    \end{table}
+\end{frame}
+
+\begin{frame}{補足資料 - RCのパラメータ設定}
+    \begin{table}[htbp]
+    \centering
+    \caption{RCのハイパーパラメータおよび最適化アルゴリズム}
+    \scriptsize
+        \begin{tabular}{llll}
+        \hline \hline
+        カテゴリ & パラメータ & 意味 & 設定値 \\
+        \hline
+        RC & $N_{\mathrm{in}}$ & 入力層の次元数 & 32, 64, 128 \\
+        & $N_{\mathrm{rec}}$ & リザバー層のニューロン数 & 1000 \\
+        & $W^{\mathrm{in}}$ & 入力重み行列の初期分布 & $\mathrm{Uniform}(-0.1, 0.1)$ \\
+        & $W^{\mathrm{rec}}$ & 再帰重み行列の初期分布 & $\mathrm{Uniform}(-1.0, 1.0)$ \\
+        & $\rho(W^{\mathrm{rec}})$ & スペクトル半径 & 0.80, 0.85, 0.90, 0.95, 1.00, 1.05 \\
+        & $\alpha\in (0,1]$ & リークレート & 0.5 \\
+        & $f$ & 活性化関数 & $\tanh$ \\
+        \hline
+        学習設定 & Algorithm & 最適化アルゴリズム & ミニバッチLMS法 \\
+                & $\mu$ & 学習率 & $1.0 \times 10^{-3}$ \\
+                & $B$ & ミニバッチサイズ & 128 \\
+                & $L$ & 入力文脈長 & 10 \\
+                & Epochs & 学習エポック数 & 1 \\
+        \hline \hline
+        \end{tabular}
+    \end{table}
+\end{frame}
+
+\begin{frame}{補足資料 - 12の言語現象と難易度}
+    %\framesubtitle{「局所的な一致」から「大域的な論理」まで}
+    %\scriptsize
+    %本研究では、言語現象を\textbf{処理に必要な情報の範囲}に基づいて分類・分析する
+
+    %\vspace{1.5em}
+    
+
+    \begin{columns}[T]
+        % --- 左カラム：浅い処理 ---
+        \column{0.48\textwidth}
+        
+        \structure{\small \textbf{Type A: 局所的・形態的制約}}
+        \vspace{0.2em}
+        \hrule
+        \vspace{0.5em}
+        \scriptsize
+        単語間の距離が近く、パターンマッチングで解ける可能性が高い現象。
+        
+        \vspace{0.5em}
+        \begin{itemize}
+            \item \textbf{Determiner-Noun} (限定詞-名詞)
+            \newline \textcolor{gray}{\textit{this dog / *these dog}}
+            \item \textbf{Subject-Verb} (主語-動詞)
+            \newline \textcolor{gray}{\textit{dogs run / *dogs runs}}
+            \item Anaphor Agreement (照応形)
+            \item Irregular Forms (不規則変化)
+            \item Argument Structure (項構造)
+        \end{itemize}
+
+        % --- 右カラム：深い処理 ---
+        \column{0.48\textwidth}
+        \alert{\small \textbf{Type B: 大域的・意味的制約}}
+        \vspace{0.2em}
+        \hrule
+        \vspace{0.5em}
+        \scriptsize
+        文全体の構造理解や、記憶の保持が必要な高難度な現象。
+
+        \vspace{0.5em}
+        \begin{itemize}
+            \item \textbf{Island Effects} (島の制約)
+            \newline \textcolor{gray}{複雑な構文における移動の禁止}
+            \item \textbf{NPI Licensing} (否定極性項目)
+            \newline \textcolor{gray}{否定語と \textit{any} 等の呼応}
+            \item \textbf{Quantifiers} (数量詞の論理)
+            \item Binding / Control / Ellipsis / Filler-Gap
+        \end{itemize}
+    \end{columns}
+
+    \vspace{1.5em}
+    \centering
+    \scriptsize
+    \textbf{仮説}: リザバー計算は短期記憶(Type A)には強いが、論理構造(Type B)には苦戦するのではないか？
+    \vspace{0.5em}
+    \begin{alertblock}{先行研究の知見}
+        \scriptsize
+        \begin{itemize}
+            \item \textbf{易}: 限定詞と名詞の一致（局所的な情報で解決可能）
+            \item \textbf{難}: 島の制約（複雑な統語構造の理解が必要）
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}{補足資料 - 「スケーリング」から「少量かつ高品質」へのシフト}
+    %\framesubtitle{スケーリング則の再考とデータの質の重要性}
+    %モデルは大きければ良い」という常識が見直され、\textbf{データ効率}が重視されている。
+    %\vspace{0.5em}
+
+    \begin{columns}[T]
+        \column{0.48\textwidth}
+        \begin{block}{Kaplanら[1]、 Hoffmannら[2]}
+            \scriptsize
+            \begin{itemize}
+                \item モデルパラメータ$N$の拡大を重視すべき(2020)
+                \item パラメータ$N$とデータ量$D$を等倍で拡大すべき(2022)
+            \end{itemize}
+        \end{block}
+
+        \column{0.48\textwidth}
+        \begin{block}{Gunasekarら[3]}
+            \scriptsize
+            \begin{itemize}
+                \item 従来のLLMがWeb上の雑多な低品質データで学習している点を指摘
+                \item 質の高いデータを選別・合成
+                \item \textcolor{red}{\textbf{1/100のデータ量}}で、大規模モデルに匹敵するコード生成能力を達成(2023)
+            \end{itemize}
+        \end{block}
+    \end{columns}
+
+    \vspace{0.5em}
+    %\centering
+    \scriptsize
+    \begin{alertblock}{新たな潮流}
+        \centering
+        \textbf{「限られた資源・データ」でいかに性能を出すか？ $\to$ BabyLM Challengeへ}
+    \end{alertblock}
+    
+    \vspace{2.5em}
+    \tiny
+    [1]Kaplan, J. et al., Scaling Laws for Neural Language Models, arXiv preprint, arXiv:2001.08361, 2020.
+
+    [2]Hoffmann, J. et al., Training Compute-Optimal Large Language Models, arXiv preprint, arXiv:2203.15556, 2022.
+
+    [3]Gunasekar, S. et al., Textbooks Are All You Need, arXiv preprint, arXiv:2306.11644, 2023.
+\end{frame}
+
+\begin{frame}{補足資料 - 提案モデルの効率性}
+    %\framesubtitle{分散表現への回帰と学習フェーズの分離による低コスト化}
+
+    %本研究は、出力ターゲットを語彙サイズ $V$ から分散表現次元 $d$ へと転換し、学習工程を分離することで、計算リソースを最小化する。
+
+    \vspace{-0.2em}
+    \begin{columns}[t]
+        % --- 左：一般的LLM ---
+        \column{0.32\textwidth}
+        \begin{block}{1. 標準的なLLM}
+            \centering
+            \textbf{\scriptsize Transformer等}
+            \vspace{0.1em} \hrule \vspace{0.2em}
+            \raggedright \scriptsize
+            \begin{itemize}
+                \item \textbf{更新対象}:\\ 
+                \textcolor{red}{全ブロック} (同時更新)
+                \item \textbf{出力層の次元}:\\
+                \textcolor{red}{語彙数 $V$} ($\approx 50k$)
+                \item \textbf{計算量}: $O(L^2 \cdot d_{m} + V)$
+                \item \textbf{構造イメージ}:\\
+                $\uparrow$ 出力層 (\textcolor{red}{$V$:更新})\\
+                $\uparrow$ 中間ブロック (\textcolor{red}{更新})\\
+                $\uparrow$ 埋め込み層 (\textcolor{red}{更新})
+            \end{itemize}
+        \end{block}
+
+        % --- 中央：先行研究 (Ueda et al.) ---
+        \column{0.32\textwidth}
+        \begin{alertblock}{2. 先行研究 [7]}
+            \centering
+            \textbf{\scriptsize 分類ベースRC}
+            \vspace{0.1em} \hrule \vspace{0.2em}
+            \raggedright \scriptsize
+            \begin{itemize}
+                \item \textbf{更新対象}:\\ 
+                \textcolor{red}{出力層のみ} (単一)
+                \item \textbf{出力層の次元}:\\
+                \textcolor{red}{語彙数 $V$} ($\approx 50k$)
+                \item \textbf{計算量}: $O(L \cdot N_{rec}^2 + \textcolor{red}{V})$
+                \item \textbf{構造イメージ}:\\
+                $\uparrow$ 出力層 (\textcolor{red}{$V$:更新})\\
+                $\uparrow$ リザバー (固定)\\
+                $\uparrow$ 入力層 (固定)
+            \end{itemize}
+        \end{alertblock}
+
+        % --- 右：提案手法 ---
+        \column{0.32\textwidth}
+        \begin{exampleblock}{3. 提案手法}
+            \centering
+            \textbf{\scriptsize 回帰ベースRC}
+            \vspace{0.1em} \hrule \vspace{0.2em}
+            \raggedright \scriptsize
+            \begin{itemize}
+                \item \textbf{更新対象}:\\ 
+                \textbf{\textcolor{blue}{出力層のみ}} (分離)
+                \item \textbf{出力層の次元}:\\
+                \textbf{\textcolor{blue}{分散表現 $d$}} ($\approx 128$)
+                \item \textbf{計算量}: $O(L \cdot N_{rec}^2 + \textbf{\textcolor{blue}{d}})$
+                \item \textbf{構造イメージ}:\\
+                $\uparrow$ 出力層 (\textbf{\textcolor{blue}{$d$:更新}})\\
+                $\uparrow$ リザバー (固定)\\
+                $\uparrow$ \textbf{\textcolor{blue}{W2V (事前学習済)}}
+            \end{itemize}
+        \end{exampleblock}
+    \end{columns}
+
+    \vspace{0.5em}
+    \scriptsize
+    \textbf{提案モデルの手法}:\\
+    1. \textbf{事前学習}: 学習フェーズを分けて一度の実行でかかる計算コストを分割している\\
+    2. \textbf{RC学習}: 正解ベクトルとの二乗誤差を最小化する \textbf{「低次元回帰」} へと問題を簡略化
+\end{frame}
+
+\begin{frame}{補足資料 - 言語現象ごとの精度の二極化}
+    %\framesubtitle{単純な「パターンマッチング」と「構造盲点」の顕在化}
+    \scriptsize
+    単純な共起で解ける問題は完璧に正解する一方、構造理解を要する問題は、ランダム(50\%)を大幅に下回る結果となった
+
+    \begin{columns}[T]
+        % --- 左：得意なタスク ---
+        \column{0.48\textwidth}
+        \begin{exampleblock}{得意: 局所的な語彙一致 ($\approx 100\%$)}
+            \centering
+            \scriptsize
+            \resizebox{\linewidth}{!}{%
+            \begin{tabular}{l | c | c}
+                \hline
+                \textbf{Task} & \textbf{Model} & \textbf{Human} \\
+                \hline
+                Binding(Principle-A) & \textbf{100.0\%} & 98.0\% \\
+                Wh-questions  & \textbf{100.0\%} & 98.0\% \\
+                \hline
+            \end{tabular}%
+            }
+
+            \vspace{0.5em}
+            \raggedright
+            \scriptsize
+            \structure{\textbf{現象: 線形距離の近接性}}
+            \begin{itemize}
+                \item \textbf{Binding (束縛)}:
+                先行詞と再帰代名詞(\textit{himself}等)が同一節内にあり、かつ距離が近いケース
+                \item「主語 $\to$ 動詞 $\to$ 再帰代名詞」という\textbf{単語列パターン}を統計的に識別できている
+            \end{itemize}
+        \end{exampleblock}
+
+        % --- 右：苦手なタスク ---
+        \column{0.48\textwidth}
+        \begin{alertblock}{苦手: 階層構造と論理 ($\approx 0\%$)}
+            \centering
+            \scriptsize
+            \resizebox{\linewidth}{!}{%
+            \begin{tabular}{l | c | c}
+                \hline
+                \textbf{Task} & \textbf{Model} & \textbf{Human} \\
+                \hline
+                Wh-vs-That (gap) & {\color{red}\textbf{0.0\%}} & 77.0\% \\
+                Only-NPI (scope) & {\color{red}\textbf{0.1\%}} & 72.0\% \\
+                \hline
+            \end{tabular}%
+            }
+
+            \vspace{0.5em}
+            \raggedright
+            \scriptsize
+            \structure{\textbf{現象: 構造的依存関係}}
+            \begin{itemize}
+                \item \textbf{NPI（否定極性項目）}:
+                NPI（否定極性項目）の正誤判定には、単語の距離ではなく「否定語が構文木の上位にあるか」という\textbf{階層構造}の理解が必要
+                \item 0\%に近いスコアは、モデルが\textbf{単語列パターン}のみを学習し、階層構造を理解できていないことを示す
+            \end{itemize}
+        \end{alertblock}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Attention-Enhanced Reservoir Computing}
+    \begin{columns}[T]
+        \column{0.49\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Attention reservoir.png}
+        \caption{アテンション強化型リザバーの概要図}
+        \end{figure}
+        \column{0.45\textwidth}
+        アテンション機構とは
+        \begin{itemize}
+            \item リザバー状態 $\bm{r}(t)$ に基づき、出力重みを\textbf{動的に計算}する仕組み
+            \item 毎時刻で「リザバーのどのノードを優先すべきか」を適応的に決定
+        \end{itemize}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}{手法 - アテンション強化型リザーバの定式化}
+    \vspace{1em}
+    \begin{columns}[t]
+        % --- 左カラム：数式 ---
+        \column{.6\textwidth}
+        \footnotesize
+        \structure{1. アテンション重みの動的生成}
+        \begin{flalign*}
+            \bm{h}(t) &= \text{ReLU}(W_1 \bm{r}(t) + \bm{b}_1) & \\
+            W_{\text{att}}(t) &= W_2 \bm{h}(t) + \bm{b}_2 &
+        \end{flalign*}
+        \textit{\scriptsize ※ $W_{\text{att}}(t)$ は時刻 $t$ ごとに計算される行列}
+
+        \vspace{1.0em}
+        \structure{2. 出力}
+        \begin{flalign*}
+            \bm{y}(t) &= W_{\text{att}}(t) \bm{r}(t) &
+        \end{flalign*}
+
+        \vspace{1.0em}
+        \structure{3. パラメータ更新 (勾配降下法)}
+        \begin{flalign*}
+            W_{\text{net}} &\leftarrow W_{\text{net}} - \gamma \nabla \mathcal{L} & 
+        \end{flalign*}
+        \vspace{-1.5em}
+        \begin{itemize}
+            \item[] $\mathcal{L} = \text{NRMSE}(\bm{y}, \bm{y}_{\text{true}})$
+        \end{itemize}
+
+        % --- 右カラム：変数定義 ---
+        \column{.38\textwidth}
+        \scriptsize
+        \begin{block}{追加・変更変数定義}
+            \begin{itemize}
+                \item $W_{\text{net}}$: 学習対象$\{W_1, W_2, \bm{b}_1, \bm{b}_2\}$ の総称
+                \item $W_{\text{att}}(t)$: アテンション重み
+                \item $\bm{h}(t)$: 隠れ層の特徴ベクトル
+                \item $\gamma$: 学習率
+                \item $\mathcal{L}$: 損失関数 (正規化RMSE)
+            \end{itemize}
+        \end{block}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Transformer}
+    \framesubtitle{Encoder - Positional Encoding}
+    \begin{columns}[T]
+        \column{0.3\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.9\linewidth]{Encoder.png}
+        \end{figure}
+
+        \column{0.65\textwidth}
+        \footnotesize
+        \begin{block}{Positional Encoding(位置エンコーディング)}
+            単語の順序情報を付与するため、埋め込みベクトルに加算する。
+            \begin{align*}
+                PE_{(pos, 2i)} &= \sin(pos / 10000^{2i/d_{\text{model}}}) \\
+                PE_{(pos, 2i+1)} &= \cos(pos / 10000^{2i/d_{\text{model}}})
+            \end{align*}
+            \textbf{変数定義：}
+            \begin{itemize}
+                \item $pos$: 文中でのトークンの位置（0, 1, ...）
+                \item $i$: 次元のインデックス（0から $d_{\text{model}}/2$ まで）
+                \item $d_{\text{model}}$: モデルの次元数（512）
+            \end{itemize}
+            \textbf{役割：} RNNのような逐次処理を行わないため、絶対的・相対的な位置関係を正弦波の周期性により表現する。
+        \end{block}
+    \end{columns}
+    \vspace{0.5em}
+    \tiny
+    [7] Vaswani, A. et al., Attention Is All You Need, NIPS, 2017.
+\end{frame}
+
+\end{document}
