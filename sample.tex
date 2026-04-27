@@ -46,45 +46,98 @@
     \tableofcontents
 \end{frame}
 
-\section{Transformerについて}
-\begin{frame}{Transformer}
+\section{Transformerのモデル構造}
+\begin{frame}{モデル構造}
+    \framesubtitle{Transformer}
     \begin{columns}[c]
-        \column{0.45\textwidth}
+        \column{0.5\textwidth}
         \begin{figure}[bthp]
         \centering
-        \includegraphics[width=1\linewidth]{transformer概要.png}
+        \includegraphics[width=1\linewidth]{Transformer全体像.png}
         \end{figure}
         \column{0.45\textwidth}
-        \begin{block}{モデル}
-            \begin{itemize}
-                \item RNNやCNNを使用せず、Attentionのみで構成される
-                \item 現行のLLMの多くがTransformerをベースとしている
-                \item 翻訳タスクを解くモデルとして登場
-            \end{itemize}
-        \end{block}
+        \small
+        \begin{itemize}
+            \item 左図は, Transformerを構成する最小単位である”ブロック”と呼ばれるもの.
+            \item 縦にN層積み重ねてつくる.
+            \item 左側をEncoderブロック
+            \item 右側をDecoderブロック と呼ぶ.
+        \end{itemize}
     \end{columns}
     \vspace{0.7em}
     \tiny
     [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
 \end{frame}
 
-\begin{frame}{Transformer}
-    \framesubtitle{Encoder}
+\begin{frame}{モデル構造}
+    \framesubtitle{Transformer}
+    \vspace{-0.5em}
     \begin{columns}[c]
-        \column{0.4\textwidth}
+        \column{0.5\textwidth}
         \begin{figure}[bthp]
         \centering
-        \includegraphics[width=0.6\linewidth]{Encoder.png}
+        \includegraphics[width=1\linewidth]{Transformer.png}
         \end{figure}
-        \column{0.6\textwidth}
-        \begin{figure}[bthp]
-        \centering
-        \includegraphics[width=1\linewidth]{Scaled Dot and Multi Head.png}
-        \end{figure}
+        \column{0.45\textwidth}
+        \small
+        \begin{itemize}
+            \item Embedding
+            \item Multi-Head Attention
+            \item Feed Forward
+            \item Others
+        \end{itemize}
+        \vspace{0.7em}
+        \tiny
+        [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
     \end{columns}
-    \vspace{3em}
-    \tiny
-    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{モデル構造 - Embedding}
+    \framesubtitle{Transformer}
+    \vspace{-0.5em}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Transformer_Embedding.png}
+        \end{figure}
+        \column{0.45\textwidth}
+        \small
+        \begin{itemize}
+            \item \textcolor{cyan}{Embedding}
+            \item Multi-Head Attention
+            \item Feed Forward
+            \item Others
+        \end{itemize}
+        \vspace{0.7em}
+        \tiny
+        [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Word Embedding (WE)}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.7\linewidth]{Embeddingの流れ.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Positional Encoding(PE)}
+    \begin{figure}[bthp]
+    \centering
+    \includegraphics[width=1\linewidth]{Positional Encoding_image.png}
+    \end{figure}
+    \begin{columns}[c]
+        \column{0.45\textwidth}
+        \small
+        \begin{itemize}
+            \item $p_i$ : i番目のトークンのPE
+            \item $d$ : ベクトルの次元数
+        \end{itemize}
+        \column{0.45\textwidth}
+        \small
+        Transformerブロックは単語の位置情報を把握できないため, \textcolor{red}{Word Embeddingに位置情報(PE)を加算.}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{Transformer}
@@ -147,6 +200,29 @@
     \vspace{2em}
     \tiny
     [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{モデル構造 - Multi-head Attention}
+    \framesubtitle{Transformer}
+    \vspace{-0.5em}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Transformer_MultiheadAttention.png}
+        \end{figure}
+        \column{0.45\textwidth}
+        \small
+        \begin{itemize}
+            \item Embedding
+            \item \textcolor{cyan}{Multi-Head Attention}
+            \item Feed Forward
+            \item Others
+        \end{itemize}
+        \vspace{0.7em}
+        \tiny
+        [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \end{columns}
 \end{frame}
 
 \begin{frame}{Transformer}
@@ -289,6 +365,117 @@
     [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
 \end{frame}
 
+\begin{frame}{モデル構造 - Feed Forward}
+    \framesubtitle{Transformer}
+    \vspace{-0.5em}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Transformer_feedforward.png}
+        \end{figure}
+        \column{0.45\textwidth}
+        \small
+        \begin{itemize}
+            \item Embedding
+            \item Multi-Head Attention
+            \item \textcolor{cyan}{FeedForward}
+            \item Others
+        \end{itemize}
+        \vspace{0.7em}
+        \tiny
+        [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Feed Forward Network(FFN)}
+    \begin{columns}[c]
+        \column{0.45\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Transformer_feedforward.png}
+        \end{figure}
+
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{FFN_image.png}
+        \end{figure}
+        \footnotesize
+        \begin{align*}
+                \text{FFN}(x) = \max(0, xW_1 + b_1)W_2 + b_2
+        \end{align*}
+        \tiny
+        %\small
+        \begin{tabular}{ll}
+            \hline
+            \textbf{変数} & \textbf{名称} \\ \hline
+            $W_{1}\in \mathbb{R}^{d_{model} \times d_{ff}}$ & 学習パラメータ  \\
+            $W_{2}\in \mathbb{R}^{d_{ff} \times d_{model}}$ & 学習パラメータ \\
+            $b_{1}\in \mathbb{R}^{d \times d}$ & 学習パラメータ  \\
+            $b_{2}\in \mathbb{R}^{d \times d}$ & 学習パラメータ \\
+            $max(0, ..)$ & ReLU関数 \\
+            $d_{model}$ & 埋め込みベクトルの次元数 \\
+            $d_{ff}$ & FFNの中間層の次元数($d_{model}の4倍$) \\\hline
+        \end{tabular}
+    \end{columns}
+    \vspace{0.5em}
+    \tiny
+    [7] Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{モデル構造 - Others}
+    \framesubtitle{Transformer}
+    \vspace{-0.5em}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Transformer_others.png}
+        \end{figure}
+        \column{0.45\textwidth}
+        \small
+        \begin{itemize}
+            \item Embedding
+            \item Multi-Head Attention
+            \item Feed Forward
+            \item \textcolor{cyan}{Others}
+        \end{itemize}
+        \vspace{0.7em}
+        \tiny
+        [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Add \& Norm}
+    \vspace{-0.5em}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Transformer_others.png}
+        \end{figure}
+        \column{0.45\textwidth}
+        \scriptsize
+        \begin{itemize}
+            \item Add：残差接続(residual connection)
+            \begin{itemize}
+                \item 深い層の学習をする時のテク
+                \item Feedforwardの前後で残差接続
+                \item Attentionの前後で残差接続
+            \end{itemize}
+            \item Norm：層正規化(Layer Normalization)
+            \begin{itemize}
+                \item 学習を効率化するテク
+                \item 隠れ層の次元軸で平均と分散をとり正規化
+            \end{itemize}
+        \end{itemize}
+        %\vspace{0.7em}
+        \tiny
+        [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \end{columns}
+\end{frame}
+
 \begin{frame}{Transformer}
     \framesubtitle{Encoder - Add \& Norm}
     \begin{columns}[T]
@@ -320,33 +507,14 @@
     [7] Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
 \end{frame}
 
-\begin{frame}{Transformer}
-    \framesubtitle{Encoder - Feed Forward Network}
-    \begin{columns}[T]
-        \column{0.3\textwidth}
-        \begin{figure}[bthp]
-        \centering
-        \includegraphics[width=0.9\linewidth]{Encoder.png}
-        \end{figure}
-
-        \column{0.65\textwidth}
-        \footnotesize
-        \begin{block}{Position-wise Feed Forward (FFN)}
-            \begin{align*}
-                \text{FFN}(x) = \max(0, xW_1 + b_1)W_2 + b_2
-            \end{align*}
-            \textbf{変数・次元数定義：}
-            \begin{itemize}
-                \item $W_1 \in \mathbb{R}^{d_{\text{model}} \times d_{ff}}$ (512 $\to$ 2048)
-                \item $W_2 \in \mathbb{R}^{d_{ff} \times d_{\text{model}}}$ (2048 $\to$ 512)
-            \end{itemize}
-            Attention層から出力された関係性情報を、非線形変換し、より抽象度の高い特徴を抽出する
-        \end{block}
-    \end{columns}
-    \vspace{0.5em}
-    \tiny
-    [7] Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\section{Attentionの応用(KVキャッシュ)}
+\begin{frame}{Attentionの応用}
+    \begin{figure}[bthp]
+    \centering
+    \includegraphics[width=1\linewidth]{Attention機構の発展.png}
+    \end{figure}
 \end{frame}
+
 
 % ==========================================
 % 参考資料
@@ -356,59 +524,61 @@
     \setbeamertemplate{bibliography item}[text]
     \scriptsize
     \begin{thebibliography}{99}
-        %\bibitem{item1}
-        %Kaplan, J. et al., Scaling Laws for Neural Language Models, arXiv preprint, arXiv:2001.08361, 2020.
-        %\bibitem{item2}
-        %Hoffmann, J. et al., Training Compute-Optimal Large Language Models, arXiv preprint, arXiv:2203.15556, 2022.
-        %\bibitem{item3}
-        %Gunasekar, S. et al., Textbooks Are All You Need, arXiv preprint, arXiv:2306.11644, 2023.
         \bibitem{item1}
-        Warstadt, A. et al., Findings of the BabyLM Challenge: Sample-Efficient Pretraining on Developmentally Plausible Corpora, Association for Computational Linguistics, 2023.
-        \bibitem{item2}
-        Kosmopoulou, D. et al., Masked Diffusion Language Models with Frequency-Informed Training, Proceedings of the First BabyLM Workshop, Association for Computational Linguistics, 2025.
-        \bibitem{item3} P\u{a}pu\c{s}oi, R. et al., A Comparison of Elementary Baselines for BabyLM, Proceedings of the First BabyLM Workshop, Association for Computational Linguistics, 2025.
-        \bibitem{item4}
-        Ueda, R. et al., Syntactic Learnability of Echo State Neural Language Models at Scale, Proceedings of NAACL 2025, 2025.
-        \bibitem{item5}
-        Warstadt, A. et al., BLiMP: The Benchmark of Linguistic Minimal Pairs for English, MIT Press, 2020.
-        %\bibitem{item9}
-        %Jaeger, H, A tutorial on training reccurent neural networks, covering BPTT, RTRL, EKF and ”echo state network” approach, GMD Report, vol.159, pp.1–46, 2002.
-        \bibitem{item6}
-        Mikolov, T. et al., Efficient Estimation of Word Representations in Vector Space, Proceedings of ICLR, 2013.
-        \bibitem{item7}
         Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+        \bibitem{item2}
+        Ainslie, J. et al., GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints, arXiv preprint arXiv:2305.13245, 2023.
+        \bibitem{item3}
+        DeepSeek-AI. et al., DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model, arXiv preprint arXiv:2405.04434, 2024.
+
     \end{thebibliography}
 \end{frame}
 
 \begin{frame}{Transformer}
-    \framesubtitle{Encoder - Positional Encoding}
-    \begin{columns}[T]
+    \begin{columns}[c]
+        \column{0.45\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Transformer.png}
+        \end{figure}
+        \column{0.45\textwidth}
+        \begin{block}{モデル}
+            \begin{itemize}
+                \item RNNやCNNを使用せず、Attentionのみで構成される
+                \item 現行のLLMの多くがTransformerをベースとしている
+                \item 翻訳タスクを解くモデルとして登場
+            \end{itemize}
+        \end{block}
+    \end{columns}
+    \vspace{0.7em}
+    \tiny
+    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{Transformer}
+    \framesubtitle{Encoder}
+    \begin{columns}[c]
         \column{0.3\textwidth}
         \begin{figure}[bthp]
         \centering
-        \includegraphics[width=0.9\linewidth]{Encoder.png}
+        \includegraphics[width=0.6\linewidth]{Encoder.png}
         \end{figure}
-
-        \column{0.65\textwidth}
-        \footnotesize
-        \begin{block}{Positional Encoding(位置エンコーディング)}
-            単語の順序情報を付与するため、埋め込みベクトルに加算する。
-            \begin{align*}
-                PE_{(pos, 2i)} &= \sin(pos / 10000^{2i/d_{\text{model}}}) \\
-                PE_{(pos, 2i+1)} &= \cos(pos / 10000^{2i/d_{\text{model}}})
-            \end{align*}
-            \textbf{変数定義：}
-            \begin{itemize}
-                \item $pos$: 文中でのトークンの位置（0, 1, ...）
-                \item $i$: 次元のインデックス（0から $d_{\text{model}}/2$ まで）
-                \item $d_{\text{model}}$: モデルの次元数（512）
-            \end{itemize}
-            \textbf{役割：} RNNのような逐次処理を行わないため、絶対的・相対的な位置関係を正弦波の周期性により表現する。
-        \end{block}
+        \column{0.7\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Scaled Dot Product Attention and Multi head.png}
+        \end{figure}
     \end{columns}
-    \vspace{0.5em}
+    \vspace{3em}
     \tiny
-    [7] Vaswani, A. et al., Attention Is All You Need, NIPS, 2017.
+    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+\end{frame}
+
+\begin{frame}{Transformer略図}
+    \begin{figure}[bthp]
+    \centering
+    \includegraphics[width=1\linewidth]{Transformer略図.png}
+    \end{figure}
 \end{frame}
 
 \end{document}
