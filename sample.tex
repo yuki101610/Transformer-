@@ -61,13 +61,13 @@
         \begin{itemize}
             \item 左図は, Transformerを構成する最小単位である”ブロック”と呼ばれるもの.
             \item 縦にN層積み重ねてつくる.
-            \item 左側をEncoderブロック
-            \item 右側をDecoderブロック と呼ぶ.
+            \item 左側：Encoderブロック
+            \item 右側：Decoderブロック
         \end{itemize}
     \end{columns}
     \vspace{0.7em}
     \tiny
-    [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
 \end{frame}
 
 \begin{frame}{モデル構造}
@@ -89,7 +89,7 @@
         \end{itemize}
         \vspace{0.7em}
         \tiny
-        [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+        \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
     \end{columns}
 \end{frame}
 
@@ -112,15 +112,32 @@
         \end{itemize}
         \vspace{0.7em}
         \tiny
-        [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+        \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
     \end{columns}
 \end{frame}
 
 \begin{frame}{Word Embedding (WE)}
-    \begin{figure}[bthp]
-        \centering
-        \includegraphics[width=0.7\linewidth]{Embeddingの流れ.png}
-    \end{figure}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{Embeddingの流れ.png}
+        \end{figure}
+        \column{0.4\textwidth}
+        \tiny
+        総トークン数をVとして、V次元のOne-hotベクトルを埋め込みに変換する行列Eを定義
+        \begin{align*}
+            E \in \mathbb{R}^{V \times d_{\text{model}}}
+        \end{align*}
+        t=[0,0..,1,..,0,0]を,第k成分のみ1で、他は全て0のOne-hotベクトルとする
+        \begin{align*}
+            tE = d
+        \end{align*}
+        \bm{d}はEのk行目と一致する横ベクトル
+    \end{columns}
+    \vspace{1.5em}
+    \tiny
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
 \end{frame}
 
 \begin{frame}{Positional Encoding(PE)}
@@ -130,77 +147,20 @@
     \end{figure}
     \begin{columns}[c]
         \column{0.45\textwidth}
-        \small
+        \tiny
         \begin{itemize}
             \item $p_i$ : i番目のトークンのPE
-            \item $d$ : ベクトルの次元数
+            \item $d$ : 特徴量$d_{model}$の次元数
         \end{itemize}
         \column{0.45\textwidth}
-        \small
+        \tiny
         Transformerブロックは単語の位置情報を把握できないため, \textcolor{red}{Word Embeddingに位置情報(PE)を加算.}
-    \end{columns}
-\end{frame}
-
-\begin{frame}{Transformer}
-    \framesubtitle{Encoder - Input Enbedding}
-    \begin{columns}[T]
-        \column{0.3\textwidth}
-        \begin{figure}[bthp]
-        \centering
-        \includegraphics[width=0.9\linewidth]{Encoder.png}
-        \end{figure}
-
-        \column{0.55\textwidth}
-        \footnotesize
-        \begin{block}{Input Embedding(埋め込み)}
-            総トークン数をVとして、V次元のOne-hotベクトルを埋め込みに変換する行列Eを定義
-            \begin{align*}
-                E \in \mathbb{R}^{V \times d_{\text{model}}}
-            \end{align*}
-            t=[0,0..,1,..,0,0]を,第k成分のみ1で、他は全て0のOne-hotベクトルとする
-            \begin{align*}
-                tE = d
-            \end{align*}
-            \bm{d}はEのk行目と一致する横ベクトル
-        \end{block}
-    \end{columns}
-    \vspace{1.5em}
-    \tiny
-    [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
-\end{frame}
-
-\begin{frame}{Transformer}
-    \framesubtitle{Encoder - Positional Encoding}
-        \begin{columns}[c]
-        % --- 左---
-        \column{0.25\textwidth}
-        \begin{figure}[bthp]
-        %\centering
-        \includegraphics[width=1\linewidth]{Encoder.png}
-        \end{figure}
-
-        % --- 中央 ---
-        \column{0.4\textwidth}
-        \begin{figure}[bthp]
-        %\centering
-        \includegraphics[width=1\linewidth]{Positional Encoding.png}
-        \end{figure}
-
-        % --- 右 ---
-        \column{0.32\textwidth}
-        \scriptsize
-        \begin{block}{位置符号}
-            入力埋め込みベクトル\bm{d}に位置符号と呼ばれるベクトルを加算
-            
-            \rightarrow 語順の情報が付与される
-        \end{block}
-        \vspace{1em}
-        正弦関数と余弦関数を用いて位置ごとに異なる固有のパターンをもつベクトルを生成し、\bm{d}に直接加算するらしい
-
     \end{columns}
     \vspace{2em}
     \tiny
-    [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
+    
+    \href{https://web.stanford.edu/class/archive/cs/cs224n/cs224n.1234/slides/cs224n-2023-lecture08-transformers.pdf}{John Hewitt, Natural Language Processing with Deep Learning CS224N/Ling284}
 \end{frame}
 
 \begin{frame}{モデル構造 - Multi-head Attention}
@@ -222,12 +182,11 @@
         \end{itemize}
         \vspace{0.7em}
         \tiny
-        [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+        \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
     \end{columns}
 \end{frame}
 
-\begin{frame}{Transformer}
-    \framesubtitle{Encoder - Scaled Dot-Product Attention}
+\begin{frame}{Scaled Dot-Product Attention}
     \begin{columns}[T]
         \vspace{-1em}
         \column{0.3\textwidth}
@@ -264,9 +223,9 @@
             \item \textbf{4. MatMul}: 重みに基づき$V$を足し合わせ、文脈を集約
         \end{itemize}
     \end{columns}
-    \vspace{2.5em}
+    \vspace{0.5em}
     \tiny
-    [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
 \end{frame}
 
 \begin{frame}{Scaled Dot-Product Attention 1}
@@ -279,7 +238,7 @@
     
     \vspace{1.5em}
     \tiny
-    [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
 \end{frame}
 
 \begin{frame}{Scaled Dot-Product Attention 2}
@@ -292,7 +251,7 @@
 
     \vspace{1.5em}
     \tiny
-    [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
 \end{frame}
 
 \begin{frame}{Scaled Dot-Product Attention 3}
@@ -305,7 +264,7 @@
 
     \vspace{1.5em}
     \tiny
-    [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
 \end{frame}
 
 \begin{frame}{Scaled Dot-Product Attention 4}
@@ -320,7 +279,7 @@
 
     \vspace{1em}
     \tiny
-    [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
 \end{frame}
 
 \begin{frame}{Multi-Head Attention}
@@ -357,7 +316,7 @@
     \end{columns}
     \vspace{0.1em}
     \tiny
-    [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
 \end{frame}
 
 \begin{frame}{Multi-Head Attention}
@@ -368,7 +327,51 @@
 
     \vspace{1em}
     \tiny
-    [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
+\end{frame}
+
+\begin{frame}{Masked Multi-Head Attention}
+    \begin{columns}[c]
+        \column{0.4\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{Masked Multi-head attention.png}
+        \end{figure}
+        \tiny
+        \begin{equation*}
+            e_{ij} = 
+            \begin{cases} 
+                \displaystyle \frac{q_i^\top k_j}{\sqrt{d_k}} & (j \le i) \\[10pt]
+                -\infty & (j > i) 
+            \end{cases}
+        \end{equation*}
+        \column{0.55\textwidth}
+        \scriptsize
+        グレーのマスは自身(Query側のトークン)から見ると, 未来のトークンなので, Maskをかけてアテンションを張れないようにする. 
+        Softmax直前に, 該当要素へ大きな負(-1.0e+10)の値を足す.
+
+        \vspace{0.5em}
+        \tiny
+        クエリ $q_i$ に対する Attention
+        \begin{equation*}
+            \text{Attention}(q_i, K, V) = \sum_{j=1}^{n} \underbrace{\left( \frac{\exp\left(\frac{q_i k_j^\top}{\sqrt{d_k}}\right)}{\sum_{l=1}^{n} \exp\left(\frac{q_i k_l^\top}{\sqrt{d_k}}\right)} \right)}_{\text{Softmax による重み}} v_j
+        \end{equation*}
+        \tiny
+        \begin{tabular}{lll}
+                \hline
+                \textbf{変数} & \textbf{名称} & \textbf{イメージ・定義} \\ \hline
+                $Q\in \mathbb{R}^{n \times d_{k}}$ & Query &  「何に注目したいか」 \\
+                $K\in \mathbb{R}^{n \times d_{k}}$ & Key & 「どのような情報を持っているか」 \\
+                $V\in \mathbb{R}^{n \times d_{v}}$ & Value & 実際に抽出される「情報」 \\
+                $n$ & シーケンス長 & 入力トークン数 \\
+                $d_k$ & 次元数 & $Q, K$ の次元数 \\
+                $d_v$ & 次元数 & $V$ の次元数 \\
+                $\text{softmax}$ & 関数 & 正規化する処理 \\ \hline
+            \end{tabular}
+    \end{columns}
+    \vspace{0.5em}
+    \tiny
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
 \end{frame}
 
 \begin{frame}{モデル構造 - Feed Forward}
@@ -390,7 +393,7 @@
         \end{itemize}
         \vspace{0.7em}
         \tiny
-        [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+        \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
     \end{columns}
 \end{frame}
 
@@ -427,7 +430,7 @@
     \end{columns}
     \vspace{0.5em}
     \tiny
-    [1] Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
 \end{frame}
 
 \begin{frame}{モデル構造 - Others}
@@ -449,7 +452,7 @@
         \end{itemize}
         \vspace{0.7em}
         \tiny
-        [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+        \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
     \end{columns}
 \end{frame}
 
@@ -478,7 +481,7 @@
         \end{itemize}
         %\vspace{0.7em}
         \tiny
-        [1]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+        \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
     \end{columns}
 \end{frame}
 
@@ -509,11 +512,11 @@
     \end{columns}
     \vspace{0.5em}
     \tiny
-    [1] Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
 \end{frame}
 
-\section{Attentionの応用(KVキャッシュ)}
-\begin{frame}{Attentionの応用}
+\section{Attentionの応用}
+\begin{frame}{Multi-head Attentionの派生}
     \begin{figure}[bthp]
     \centering
     \includegraphics[width=0.8\linewidth]{Attention機構の発展.png}
@@ -522,10 +525,50 @@
     MultiheadAttentionの派生系が近年のLLMで使用される
     
     目的：性能を維持したまま計算を効率化
+    
+    \tiny
+    \href{https://arxiv.org/abs/2305.13245}{Ainslie, J. et al., GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints, arXiv preprint arXiv:2305.13245, 2023.}
+    
+    \href{https://arxiv.org/abs/2405.04434}{DeepSeek-AI. et al., DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model, arXiv preprint arXiv:2405.04434, 2024.}
+\end{frame}
+
+\begin{frame}{Grouped Query Attention}
+    \begin{figure}[bthp]
+    \centering
+    \includegraphics[width=0.7\linewidth]{MQA - GQA.png}
+    \end{figure}
+    \begin{columns}[c]
+        \column{0.45\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.8\linewidth]{GQA-MQA performance.png}
+        \end{figure}
+
+        \column{0.5\textwidth}
+        \tiny
+        MQA：単一のK, Vをヘッド間で共有することで推論を高速化$\rightarrow$性能低下の問題発生
+        
+        \vspace{1em}
+        GQA：MQAとMHAの中間に位置する。MQAに近い速度とMHAに近い性能の両立が確認された
+        
+        \vspace{4em}
+        \tiny
+        \href{https://arxiv.org/abs/2305.13245}{Ainslie, J. et al., GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints, arXiv preprint arXiv:2305.13245, 2023.}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Multi-head Latent Attention}
+    \begin{figure}[bthp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{Multi-head Latent Attention.png}
+    \end{figure}
+    
+    \tiny
+    \href{https://arxiv.org/abs/2405.04434}{DeepSeek-AI. et al., DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model, arXiv preprint arXiv:2405.04434, 2024.}
 \end{frame}
 
 \section{計算過程の解釈・解析}
-\begin{frame}{解釈性 - どのように文脈情報を参照しているか}
+\begin{frame}{どの文脈情報を参照しているか}
     \begin{figure}[bthp]
     \centering
     \includegraphics[width=1\linewidth]{Attention Layer-Head.png}
@@ -581,6 +624,8 @@
         Vig, J. and Belinkov, Y., Analyzing the Structure of Attention in a Transformer Language Model, arXiv preprint arXiv:1906.04284, 2019.
         \bibitem{item5}
         Fu, T. et al., MoA: Mixture of Sparse Attention for Automatic Large Language Model Compression, 2025.
+        \bibitem{item6}
+        John Hewitt, Natural Language Processing with Deep Learning CS224N/Ling284, https://web.stanford.edu/class/cs224n/slides/cs224n-2023-lecture08-transformers.pdf. アクセス日2026/4/28
     \end{thebibliography}
 \end{frame}
 
