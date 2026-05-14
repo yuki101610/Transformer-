@@ -374,6 +374,22 @@
     \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
 \end{frame}
 
+\begin{frame}{Cross Attention}
+    \begin{columns}[c]
+        \column{0.4\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{cross attention.png}
+        \end{figure}
+        \column{0.55\textwidth}
+        \scriptsize
+        Attention計算時にkeyとvalueをencderのベクトル列から取得し, queryをdecoderのベクトル列から取得することで, 2つの系列の情報を統合する
+    \end{columns}
+    \vspace{0.5em}
+    \tiny
+    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
+\end{frame}
+
 \begin{frame}{モデル構造 - Feed Forward}
     \framesubtitle{Transformer}
     \vspace{-0.5em}
@@ -485,18 +501,17 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Add \& Norm(削除予定)}
-    \begin{columns}[T]
-        \column{0.3\textwidth}
+\begin{frame}{Add \& Norm}
+    \vspace{-0.5em}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
         \begin{figure}[bthp]
         \centering
-        \includegraphics[width=0.9\linewidth]{Encoder.png}
+        \includegraphics[width=1\linewidth]{Transformer_others.png}
         \end{figure}
-
-        \column{0.65\textwidth}
-        \footnotesize
-        \begin{block}{Residual Connection \& Layer Norm}
-            各サブレイヤの出力を以下の処理を行う
+        \column{0.45\textwidth}
+        \scriptsize
+        各サブレイヤの出力を以下の処理を行う
             \begin{align*}
                 \text{Output} = \text{LayerNorm}(x + \text{Sublayer}(x))
             \end{align*}
@@ -508,11 +523,10 @@
                 
                 \rightarrow 学習が高速化・安定化
             \end{itemize}
-        \end{block}
+        \vspace{0.7em}
+        \tiny
+        \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
     \end{columns}
-    \vspace{0.5em}
-    \tiny
-    \href{https://arxiv.org/abs/1706.03762}{Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.}
 \end{frame}
 
 \section{Attentionの応用}
@@ -557,6 +571,17 @@
     \end{columns}
 \end{frame}
 
+\begin{frame}{Grouped Query Attention}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.8\linewidth]{Grouped Query Attention.png}
+    \end{figure}
+
+    \vspace{1em}
+    \tiny
+    \href{https://arxiv.org/abs/2305.13245}{Ainslie, J. et al., GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints, arXiv preprint arXiv:2305.13245, 2023.}
+\end{frame}
+
 \begin{frame}{Multi-head Latent Attention}
     \begin{figure}[bthp]
     \centering
@@ -567,7 +592,38 @@
     \href{https://arxiv.org/abs/2405.04434}{DeepSeek-AI. et al., DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model, arXiv preprint arXiv:2405.04434, 2024.}
 \end{frame}
 
+\begin{frame}{Multi-head Latent Attention}
+    \begin{figure}[bthp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{Multi-head Latent Attention fig2.png}
+    \end{figure}
+    
+    \tiny
+    \href{https://arxiv.org/abs/2405.04434}{DeepSeek-AI. et al., DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model, arXiv preprint arXiv:2405.04434, 2024.}
+\end{frame}
+
+\begin{frame}{Multi-head Latent Attention}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.8\linewidth]{Multi-head Latent Attention 1.png}
+    \end{figure}
+
+    \vspace{1em}
+    \tiny
+    \href{https://arxiv.org/abs/2405.04434}{DeepSeek-AI. et al., DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model, arXiv preprint arXiv:2405.04434, 2024.}
+\end{frame}
+
+
+
 \section{計算過程の解釈・解析}
+\begin{frame}{計算過程の解析・解釈}
+    \begin{itemize}
+            \item \textcolor{cyan}{注意パターンの観察}
+            \item 語彙空間への射影
+            \item 出力への影響度
+        \end{itemize}
+\end{frame}
+
 \begin{frame}{どの文脈情報を参照しているか}
     \begin{figure}[bthp]
     \centering
@@ -616,15 +672,65 @@
 \end{frame}
 
 \begin{frame}{プローブ}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{Probing品詞タギング.png}
+        \end{figure}
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{Probing 緯度経度.png}
+        \end{figure}
+    \end{columns}
+\end{frame}
+
+
+\begin{frame}{Activation Patching}
     \begin{figure}[bthp]
-    \centering
-    \includegraphics[width=1\linewidth]{Sparse Auto Encoder.png}
+        \centering
+        \includegraphics[width=1\linewidth]{Activation Patching.png}
     \end{figure}
     \vspace{5em}
     \tiny
-    \href{https://arxiv.org/abs/2309.08600}{Cunningham, H. et al., Sparse Autoencoders Find Highly Interpretable Features in Language Models, arXiv preprint arXiv:2309.08600, 2023.}
+    \href{https://arxiv.org/abs/2309.16042}{Zhang, F. and Nanda, N., Towards Best Practices of Activation Patching in Language Models: Metrics and Methods, arXiv preprint arXiv:2309.16042, 2024.}
 \end{frame}
 
+\begin{frame}{計算過程の解析・解釈}
+    \begin{itemize}
+        \item 注意パターンの観察
+        \item \textcolor{cyan}{語彙空間への射影}
+        \item 出力への影響度
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{パラメータを語彙に紐づける方法}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{パラメータ・語彙紐づけ.png}
+    \end{figure}
+    \vspace{1em}
+    \tiny
+    \href{https://arxiv.org/abs/2209.02535}{Dar, G. et al., Analyzing Transformers in Embedding Space, arXiv preprint arXiv:2209.02535, 2022.}
+\end{frame}
+
+\begin{frame}{中間表現を語彙に紐づける方法}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{Logit Lens.png}
+        \end{figure}
+        \column{0.5\textwidth}
+        \tiny
+        各層の中間表現を予測ヘッドに渡して語彙に紐づける
+        モデル各層を通して予測がどう進んでいったか追うことが可能
+    \end{columns}
+    \vspace{1em}
+    \tiny
+    \href{https://arxiv.org/abs/2209.02535}{Dar, G. et al., Analyzing Transformers in Embedding Space, arXiv preprint arXiv:2209.02535, 2022.}
+\end{frame}
 
 % ==========================================
 % 参考資料
@@ -632,7 +738,7 @@
 \setbeamertemplate{frametitle continuation}{}
 \begin{frame}[allowframebreaks]{参考文献}
     \setbeamertemplate{bibliography item}[text]
-    \scriptsize
+    \tiny
     \begin{thebibliography}{99}
         \bibitem{item1}
         Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
@@ -645,9 +751,13 @@
         \bibitem{item5}
         Fu, T. et al., MoA: Mixture of Sparse Attention for Automatic Large Language Model Compression, 2025.
         \bibitem{item6}
-        John Hewitt, Natural Language Processing with Deep Learning CS224N/Ling284, https://web.stanford.edu/class/cs224n/slides/cs224n-2023-lecture08-transformers.pdf. アクセス日2026/4/28
+        John Hewitt, Natural Language Processing with Deep Learning CS224N/Ling284, https://web.stanford.edu/class/cs224n/slides/cs224n-spr2024-lecture08-transformers.pdf. アクセス日2026/5/1
         \bibitem{item7}
         Cunningham, H. et al., Sparse Autoencoders Find Highly Interpretable Features in Language Models, arXiv preprint arXiv:2309.08600, 2023.
+        \bibitem{item8}
+        Zhang, F. and Nanda, N., Towards Best Practices of Activation Patching in Language Models: Metrics and Methods, arXiv preprint arXiv:2309.16042, 2024.
+        \bibitem{item9}
+        Dar, G. et al., Analyzing Transformers in Embedding Space, arXiv preprint arXiv:2209.02535, 2022.
     \end{thebibliography}
 \end{frame}
 
