@@ -613,17 +613,6 @@
     \href{https://arxiv.org/abs/2405.04434}{DeepSeek-AI. et al., DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model, arXiv preprint arXiv:2405.04434, 2024.}
 \end{frame}
 
-
-
-\section{計算過程の解釈・解析}
-\begin{frame}{計算過程の解析・解釈}
-    \begin{itemize}
-            \item \textcolor{cyan}{注意パターンの観察}
-            \item 語彙空間への射影
-            \item 出力への影響度
-        \end{itemize}
-\end{frame}
-
 \begin{frame}{どの文脈情報を参照しているか}
     \begin{figure}[bthp]
     \centering
@@ -661,14 +650,29 @@
     \href{https://openreview.net/forum?id=konDsSUSqg}{Fu, T. et al., MoA: Mixture of Sparse Attention for Automatic Large Language Model Compression, 2025.}
 \end{frame}
 
-\begin{frame}{Sparse Auto Encoder: SAE}
-    \begin{figure}[bthp]
-    \centering
-    \includegraphics[width=1\linewidth]{Sparse Auto Encoder.png}
-    \end{figure}
-    \vspace{5em}
-    \tiny
-    \href{https://arxiv.org/abs/2309.08600}{Cunningham, H. et al., Sparse Autoencoders Find Highly Interpretable Features in Language Models, arXiv preprint arXiv:2309.08600, 2023.}
+\section{計算過程の解釈・解析について}
+\begin{frame}{Mechanistic Interpretability}
+    \begin{itemize}
+        \item AIの内部構造を解明し, 安全性や価値の整合性を確保するために重要
+        \item ニューラルネットワークが学習した計算メカニズムを人間が理解可能な形に改正し, 詳細かつ因果的な理解を目指す
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Mechanistic Interpretability}
+    \begin{itemize}
+        \item \textcolor{cyan}{観察的手法}
+        \begin{itemize}
+            \item プローブ
+            \item Logit lens
+            \item Sparse Auto Encoder
+        \end{itemize}
+        \item 介入的手法
+        \begin{itemize}
+            \item Active Patching
+            \item Causal Abstraction 
+            \item Hypothesis Testiong
+        \end{itemize}
+    \end{itemize}
 \end{frame}
 
 \begin{frame}{プローブ}
@@ -686,36 +690,21 @@
     \end{columns}
 \end{frame}
 
-
-\begin{frame}{Activation Patching}
+\begin{frame}{緯度経度のプローブ}
     \begin{figure}[bthp]
         \centering
-        \includegraphics[width=1\linewidth]{Activation Patching.png}
+        \includegraphics[width=1\linewidth]{緯度経度のプローブ.png}
     \end{figure}
-    \vspace{5em}
-    \tiny
-    \href{https://arxiv.org/abs/2309.16042}{Zhang, F. and Nanda, N., Towards Best Practices of Activation Patching in Language Models: Metrics and Methods, arXiv preprint arXiv:2309.16042, 2024.}
-\end{frame}
-
-\begin{frame}{計算過程の解析・解釈}
     \begin{itemize}
-        \item 注意パターンの観察
-        \item \textcolor{cyan}{語彙空間への射影}
-        \item 出力への影響度
+        \item 地名を表すモデル表現から地理座標をプローブ
+        \item →地理座標はおそらくエンコードされている
     \end{itemize}
-\end{frame}
-
-\begin{frame}{パラメータを語彙に紐づける方法}
-    \begin{figure}[bthp]
-        \centering
-        \includegraphics[width=1\linewidth]{パラメータ・語彙紐づけ.png}
-    \end{figure}
-    \vspace{1em}
+    \vspace{2em}
     \tiny
-    \href{https://arxiv.org/abs/2209.02535}{Dar, G. et al., Analyzing Transformers in Embedding Space, arXiv preprint arXiv:2209.02535, 2022.}
+    \href{https://arxiv.org/abs/2310.02207}{Gurnee, W. and Tegmark, M., Language Models Represent Space and Time, ICLR, 2024.}
 \end{frame}
 
-\begin{frame}{中間表現を語彙に紐づける方法}
+\begin{frame}{Logit lens}
     \begin{columns}[c]
         \column{0.5\textwidth}
         \begin{figure}[bthp]
@@ -730,6 +719,165 @@
     \vspace{1em}
     \tiny
     \href{https://arxiv.org/abs/2209.02535}{Dar, G. et al., Analyzing Transformers in Embedding Space, arXiv preprint arXiv:2209.02535, 2022.}
+\end{frame}
+
+\begin{frame}{PolysemanticityとSuperposition}
+    Polysemanticity(多義性)
+    \begin{itemize}
+        \item 1つのニューロンが意味的に異なる複数の入力に発火する現象
+        \item \rightarrow 解釈しづらい
+    \end{itemize}
+    Superposition(重ね合わせ)
+    \begin{itemize}
+        \item あまり登場しないレアな概念を少数のニューロンに圧縮することで, モデルがレイヤーの次元数よりも多くの特徴量を学習できるという仮説
+        \item 重ね合わせによってPolysemanticityが起きているのではと考えられている
+    \end{itemize}
+    \vspace{3em}
+    \tiny
+    \url{https://transformer-circuits.pub/2022/toy_model/index.html} (2022)
+\end{frame}
+
+\begin{frame}{Sparse Auto Encoder: SAE}
+    \begin{figure}[bthp]
+    \centering
+    \includegraphics[width=1\linewidth]{Sparse Auto Encoder.png}
+    \end{figure}
+    \vspace{5em}
+    \tiny
+    \href{https://arxiv.org/abs/2309.08600}{Cunningham, H. et al., Sparse Autoencoders Find Highly Interpretable Features in Language Models, arXiv preprint arXiv:2309.08600, 2023.}
+\end{frame}
+
+\begin{frame}{Sparse Auto Encoder: SAE}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{SAE略図.png}
+        \end{figure}
+        \column{0.45\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{SAE略図具体例.png}
+        \end{figure}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{SAEによる特徴抽出過程}
+    \begin{columns}[T]
+        \column{0.35\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{SAE_process.png}
+        \end{figure}
+        
+        \column{0.65\textwidth}
+        \begin{enumerate}\scriptsize 
+            \item \textbf{LLM内部activationを収集}
+            \begin{itemize}\scriptsize 
+                \item 多様なテキストをLLMへ入力
+                \item 特定layerのactivationを集める
+                \item 例：MLP activation（活性化関数後）
+            \end{itemize}
+            \item \textbf{SAEを学習}
+            \begin{itemize}\scriptsize 
+                \item activationを高次元空間へ射影
+                \item sparsity制約により少数featureのみ活性化
+                \item sparse featureの組み合わせから元activationを再構成
+            \end{itemize}
+            \item \textbf{featureを解析}
+            \begin{itemize}\scriptsize 
+                \item 学習済みSAEでactivationをfeatureへ分解
+                \item 各featureがどの入力で活性化するか解析
+                \item 一部featureは人間可読な概念に対応
+                \begin{itemize}\scriptsize 
+                    \item 例：動物, コード, 感情
+                \end{itemize}
+            \end{itemize}
+        \end{enumerate}
+    \end{columns}
+    \vspace{0.3em}
+    \tiny
+    \href{https://arxiv.org/abs/2507.08017}{Beckmann, P. and Queloz, M., Mechanistic Indicators of Understanding in Large Language Models, arXiv preprint arXiv:2507.08017, 2025.}
+\end{frame}
+
+\begin{frame}{特定の建築物に発火する特徴の例}
+    \begin{figure}[bthp]
+    \centering
+    \includegraphics[width=1\linewidth]{SAE_Golden Gate Bridge Feature.png}
+    \end{figure}
+    \vspace{3em}
+    \tiny
+    https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html (2024)
+\end{frame}
+
+\begin{frame}{Mechanistic Interpretability}
+    \begin{itemize}
+        \item 観察的手法
+        \begin{itemize}
+            \item プローブ
+            \item Logit lens
+            \item Sparse Auto Encoder
+        \end{itemize}
+        \item \textcolor{cyan}{介入的手法}
+        \begin{itemize}
+            \item Active Patching
+            \item Causal Abstraction
+            \item Hypothesis Testiong
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Activation Patching}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Activation Patching.png}
+    \end{figure}
+    \vspace{5em}
+    \tiny
+    \href{https://arxiv.org/abs/2309.16042}{Zhang, F. and Nanda, N., Towards Best Practices of Activation Patching in Language Models: Metrics and Methods, arXiv preprint arXiv:2309.16042, 2024.}
+\end{frame}
+
+\begin{frame}{Hypothisis Testing}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Hypothisis testing.png}
+        \end{figure}
+        \column{0.45\textwidth}
+        \begin{itemize}
+            \item Equivalence
+            \item Independence
+            \item Minimality
+        \end{itemize}
+    \end{columns}
+    \vspace{5em}
+    \tiny
+    \href{https://arxiv.org/abs/2410.13032}{Shi, C. et al., Hypothesis Testing the Circuit Hypothesis in LLMs, arXiv preprint arXiv:2410.13032, 2024.}
+\end{frame}
+
+\begin{frame}{回路特定までの流れ}
+    \begin{itemize}
+        \item モデル・SAEの選定
+        \begin{itemize}
+            \item 現在はGPT2-SMALLを使用
+            \item Logit lens
+            \item Sparse Auto Encoder
+        \end{itemize}
+        \item SAE Featureの特定
+        \begin{itemize}
+            \item Active Patching
+            \item Causal Abstraction 
+            \item Hypothesis Testiong
+        \end{itemize}
+        \item 因果関係の証明
+        \begin{itemize}
+            \item Active Patching
+            \item Attribution
+        \end{itemize}
+        \item 回路の特定
+        \item 回路の普遍性検証
+    \end{itemize}
 \end{frame}
 
 % ==========================================
@@ -751,13 +899,23 @@
         \bibitem{item5}
         Fu, T. et al., MoA: Mixture of Sparse Attention for Automatic Large Language Model Compression, 2025.
         \bibitem{item6}
-        John Hewitt, Natural Language Processing with Deep Learning CS224N/Ling284, https://web.stanford.edu/class/cs224n/slides/cs224n-spr2024-lecture08-transformers.pdf. アクセス日2026/5/1
+        John Hewitt, Natural Language Processing with Deep Learning CS224N/Ling284, \url{https://web.stanford.edu/class/cs224n/slides/cs224n-spr2024-lecture08-transformers.pdf}. アクセス日2026/5/19
         \bibitem{item7}
         Cunningham, H. et al., Sparse Autoencoders Find Highly Interpretable Features in Language Models, arXiv preprint arXiv:2309.08600, 2023.
         \bibitem{item8}
         Zhang, F. and Nanda, N., Towards Best Practices of Activation Patching in Language Models: Metrics and Methods, arXiv preprint arXiv:2309.16042, 2024.
         \bibitem{item9}
         Dar, G. et al., Analyzing Transformers in Embedding Space, arXiv preprint arXiv:2209.02535, 2022.
+        \bibitem{item10}
+        \url{https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html} アクセス日2026/5/16
+        \bibitem{item11}
+        \url{https://transformer-circuits.pub/2022/toy_model/index.html} アクセス日2026/5/19
+        \bibitem{item12}
+        Gurnee, W. and Tegmark, M., Language Models Represent Space and Time, ICLR, 2024.
+        \bibitem{item13}
+        Shi, C. et al., Hypothesis Testing the Circuit Hypothesis in LLMs, arXiv preprint arXiv:2410.13032, 2024.
+        \bibitem{item14}
+        Beckmann, P. and Queloz, M., Mechanistic Indicators of Understanding in Large Language Models, arXiv preprint arXiv:2507.08017, 2025.
     \end{thebibliography}
 \end{frame}
 
@@ -801,11 +959,36 @@
     [7]Vaswani, A. et al., Attention Is All You Need, Proceedings of the 31st International Conference on Neural Information Processing Systems, pp.6000 - 6010, 2017.
 \end{frame}
 
-\begin{frame}{Transformer略図}
+\begin{frame}{Encoder Decoderモデル略図}
     \begin{figure}[bthp]
     \centering
     \includegraphics[width=1\linewidth]{Transformer略図.png}
     \end{figure}
+\end{frame}
+
+\begin{frame}{活性化空間の特徴量抽出}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{特徴量抽出説明1.png}
+        \end{figure}
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{Activate space.png}
+        \end{figure}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{パラメータを語彙に紐づける方法}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{パラメータ・語彙紐づけ.png}
+    \end{figure}
+    \vspace{1em}
+    \tiny
+    \href{https://arxiv.org/abs/2209.02535}{Dar, G. et al., Analyzing Transformers in Embedding Space, arXiv preprint arXiv:2209.02535, 2022.}
 \end{frame}
 
 \end{document}
