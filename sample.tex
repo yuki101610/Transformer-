@@ -560,10 +560,10 @@
 
         \column{0.5\textwidth}
         \tiny
-        MQA：単一のK, Vをヘッド間で共有することで推論を高速化$\rightarrow$性能低下の問題発生
+        MQA：単一のK, Vをヘッド間で共有することで推論を高速化$\rightarrow$性能低下の問題
         
         \vspace{1em}
-        GQA：MQAとMHAの中間に位置する。MQAに近い速度とMHAに近い性能の両立が確認された
+        GQA：MQAとMHAの中間に位置する。MQAに近い速度とMHAに近い性能の両立が確認されている
         
         \vspace{4em}
         \tiny
@@ -715,6 +715,10 @@
         \tiny
         各層の中間表現を予測ヘッドに渡して語彙に紐づける
         モデル各層を通して予測がどう進んでいったか追うことが可能
+
+        左図ではLayer4の時点で正解の単語を選択している
+
+        \rightarrow Layer4の時点で既に東京, 日本の首都などの概念が形成されている可能性がある
     \end{columns}
     \vspace{1em}
     \tiny
@@ -745,21 +749,6 @@
     \vspace{5em}
     \tiny
     \href{https://arxiv.org/abs/2309.08600}{Cunningham, H. et al., Sparse Autoencoders Find Highly Interpretable Features in Language Models, arXiv preprint arXiv:2309.08600, 2023.}
-\end{frame}
-
-\begin{frame}{Sparse Auto Encoder: SAE}
-    \begin{columns}[c]
-        \column{0.5\textwidth}
-        \begin{figure}[bthp]
-        \centering
-        \includegraphics[width=1\linewidth]{SAE略図.png}
-        \end{figure}
-        \column{0.45\textwidth}
-        \begin{figure}[bthp]
-        \centering
-        \includegraphics[width=1\linewidth]{SAE略図具体例.png}
-        \end{figure}
-    \end{columns}
 \end{frame}
 
 \begin{frame}{SAEによる特徴抽出過程}
@@ -845,39 +834,293 @@
         \includegraphics[width=1\linewidth]{Hypothisis testing.png}
         \end{figure}
         \column{0.45\textwidth}
-        \begin{itemize}
-            \item Equivalence
-            \item Independence
-            \item Minimality
+        \begin{itemize}\scriptsize
+            \item Equivalence(等価性)
+            \begin{itemize}\scriptsize
+                \item その回路だけ残しても元のモデルと同じ振る舞いをするか
+                \item 回路外を遮断・置換する
+            \end{itemize}\scriptsize
+            \item Independence(独立性)
+            \begin{itemize}\scriptsize
+                \item 他の回路に依存せず, 単体で機能するか
+                \item 回路以外を壊しても(例：別プロンプトの活性に置換やノイズを加える)内部計算が成立するか
+                \item 例：壊れてしまう場合、外部依存であると解釈できる
+            \end{itemize}\scriptsize
+            \item Minimality(最小性)
+            \begin{itemize}\scriptsize
+                \item 回路の要素を削除して性能が大きく低下するか調査
+                \item 低下しない場合, 回路はminimalではないと解釈できる
+            \end{itemize}
         \end{itemize}
     \end{columns}
-    \vspace{5em}
+    \vspace{0.3em}
     \tiny
     \href{https://arxiv.org/abs/2410.13032}{Shi, C. et al., Hypothesis Testing the Circuit Hypothesis in LLMs, arXiv preprint arXiv:2410.13032, 2024.}
 \end{frame}
 
-\begin{frame}{回路特定までの流れ}
+\section{回路研究の進捗}
+\begin{frame}{回路とは}
+    特定のタスクを実行するために必要かつ十分な最小限のノード(Attention head, MLPなど)とそれらをつなぐエッジ(重み)の部分グラフ
+\end{frame}
+
+\begin{frame}{回路研究について}
+    大きく2つに分けられる
     \begin{itemize}
-        \item モデル・SAEの選定
-        \begin{itemize}
-            \item 現在はGPT2-SMALLを使用
-            \item Logit lens
-            \item Sparse Auto Encoder
+        \item 振る舞いの解釈
+        \begin{itemize}\scriptsize
+            \item この振る舞いはどの回路で実現されるのか？
         \end{itemize}
-        \item SAE Featureの特定
-        \begin{itemize}
-            \item Active Patching
-            \item Causal Abstraction 
-            \item Hypothesis Testiong
+        \item 構成要素の解釈
+        \begin{itemize}\scriptsize
+            \item このAttenton headは何をしているのか？など
         \end{itemize}
-        \item 因果関係の証明
-        \begin{itemize}
-            \item Active Patching
-            \item Attribution
-        \end{itemize}
-        \item 回路の特定
-        \item 回路の普遍性検証
     \end{itemize}
+    \vspace{0.5em}
+    ワークフロー
+    \begin{enumerate}
+        \item LMの振る舞いとデータセットを選ぶ
+        \item Computational graphを定義
+        \begin{itemize}\scriptsize
+            \item ノード, エッジをどう定義するか
+        \end{itemize}
+        \item Localization
+        \begin{itemize}\scriptsize
+            \item 振る舞いにとって重要なノード, エッジを特定
+            \item Activation Patchingが使えそう
+        \end{itemize}
+        \item Interpretation
+        \begin{itemize}\scriptsize
+            \item 各ノード, エッジが振る舞いにどう寄与するか
+            \item SAE, Visualization, vocabularyprojectionなど色々使える
+        \end{itemize}
+        \item Evaluation
+        \begin{itemize}\scriptsize
+            \item 本当にその回路のみでタスクをクリアしているか調べる
+            \item Hypothesis testingが使えそう
+        \end{itemize}
+    \end{enumerate}
+    \vspace{0.5em}
+    \tiny
+    \href{https://arxiv.org/abs/2407.02646}{Rai, D. et al., A Practical Review of Mechanistic Interpretability for Transformer-Based Language Models, arXiv preprint arXiv:2407.02646, 2024.}
+\end{frame}
+
+\begin{frame}{Gemma2-2bについて}
+    \footnotesize
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{lc}
+            \hline
+            項目 & 値 \\
+            \hline
+            総パラメータ数 & 26億 \\
+            Transformer層数 & 26 \\
+            隠れ層次元数 ($d_{\mathrm{model}}$) & 2304 \\
+            MLP次元数 & 9216 \\
+            Attention Head数 & 8 \\
+            KV Head数 (GQA) & 4 \\
+            Head Dimension & 256 \\
+            最大コンテキスト長 & 8192 tokens \\
+            語彙数 & 256,000 \\
+            Position Encoding & RoPE \\
+            Attention方式 & GQA + Local/Global Attention \\
+            Sliding Window Size & 4096 tokens \\
+            \hline
+        \end{tabular}
+    \end{table}
+\vspace{0.5em}
+\tiny
+\href{https://arxiv.org/abs/2408.00118}{Gemma Team et al., Gemma 2: Improving Open Language Models at a Practical Size, arXiv preprint arXiv:2408.00118, 2024.}
+\end{frame}
+
+\begin{frame}{Gemma2-2bとGPT-2 Smallの比較}
+    \footnotesize
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{lcc}
+            \hline
+            項目 & GPT-2 Small & Gemma2-2B \\
+            \hline
+            総パラメータ数 & 1.24億 & 26億 \\
+            Transformer層数 & 12 & 26 \\
+            隠れ層次元数 ($d_{\mathrm{model}}$) & 768 & 2304 \\
+            MLP次元数 & 3072 & 9216 \\
+            Attention Head数 & 12 & 8 \\
+            KV Head数 (GQA) & なし & 4 \\
+            Head Dimension & 64 & 256 \\
+            最大コンテキスト長 & 1024 tokens & 8192 tokens \\
+            語彙数 & 50,257 & 256,000 \\
+            Position Encoding & Learned & RoPE \\
+            Attention方式 & Multi-Head & GQA + Local/Global \\
+            Sliding Window Size & なし & 4096 tokens \\
+            \hline
+        \end{tabular}
+    \end{table}
+
+\vspace{0.5em}
+
+\tiny
+
+\href{https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf}
+{Radford, A. et al., Language Models are Unsupervised Multitask Learners, OpenAI Technical Report, 2019.}\\
+
+\href{https://arxiv.org/abs/2408.00118}
+{Gemma Team et al., Gemma 2: Improving Open Language Models at a Practical Size, arXiv preprint arXiv:2408.00118, 2024.}
+
+\end{frame}
+
+\begin{frame}{Grouped Query Attention}
+    \begin{figure}[bthp]
+    \centering
+    \includegraphics[width=0.7\linewidth]{MQA - GQA.png}
+    \end{figure}
+    \begin{columns}[c]
+        \column{0.45\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.8\linewidth]{GQA-MQA performance.png}
+        \end{figure}
+
+        \column{0.5\textwidth}
+        \tiny
+        MQA：単一のK, Vをヘッド間で共有することで推論を高速化$\rightarrow$性能低下の問題
+        
+        \vspace{1em}
+        GQA：MQAとMHAの中間に位置する。MQAに近い速度とMHAに近い性能の両立が確認されている
+        
+        \vspace{4em}
+        \tiny
+        \href{https://arxiv.org/abs/2305.13245}{Ainslie, J. et al., GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints, arXiv preprint arXiv:2305.13245, 2023.}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{「LMの振る舞いとデータセット」候補}
+    \begin{enumerate}\scriptsize
+        \item 「思考の自己修正」
+        \begin{itemize}\scriptsize
+            \item 生成タスクにおいて途中で自身の出力の間違いに気づき正解を再出力をする振る舞い
+        \end{itemize}\scriptsize
+        \item 「ユーザーへの過度な同調」
+        \begin{itemize}\scriptsize
+            \item LMが真実を知っているのにもかかわらず, ユーザーの主張に迎合して嘘や間違いを出力する振る舞い
+        \end{itemize}\scriptsize
+        \item 「状態更新の追跡」\textcolor{cyan}{\leftarrow 現在これをやっている}
+        \begin{itemize}\scriptsize
+            \item 物体や人物の状態(位置・所有権)が次々と変わる時, それらを正確に追跡する振る舞い
+            \item データセット「bAbItasks」が使えそう
+        \end{itemize}\scriptsize
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{「状態更新の追跡」に関する研究}
+    振る舞い：物体や人物の状態(位置・所有権)が次々と変わる時, それらを正確に追跡する\\
+    \vspace{0.5em}
+    仮説：
+    \begin{enumerate}\scriptsize
+        \item 状態を上書きする(過去情報を抑制, 新しい情報を活性化させる)回路が存在する
+        \begin{itemize}\scriptsize
+            \item 「状態A：鍵が箱に入っている。, 状態B：鍵が箱から棚へ移される。, 質問：鍵は現在どこ？, 答え：棚」この時, Aを抑制, Bを活性化, または抑制+活性化させる回路が存在する
+        \end{itemize}\scriptsize
+        \item 古い情報と新しい情報から正解を読み出す回路が存在する
+        \begin{itemize}\scriptsize
+            \item A,BからBを選ぶ読み出し回路が存在する
+        \end{itemize}\scriptsize
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{「状態更新の追跡」に関する研究}
+    仮説：
+    \begin{enumerate}\scriptsize
+        \item 状態更新回路（State Update Circuit）
+        \begin{itemize}\scriptsize
+            \item モデル内部に保持された状態表現そのものを更新する回路が存在する
+            \item 例：
+            「鍵は箱にある」$\rightarrow$
+            「鍵は棚へ移された」
+            の入力により，
+            「鍵$\rightarrow$箱」
+            の表現が
+            「鍵$\rightarrow$棚」
+            に更新される
+            \item 内部状態の書き換えが行われると仮定
+        \end{itemize}
+        \vspace{0.3em}
+        \item 動的読み出し回路（Dynamic Readout Circuit）
+        \begin{itemize}\scriptsize
+            \item 過去状態と現在状態の両方が保持される
+            \item 質問時に現在有効な状態のみを選択して読み出す回路が存在する
+            \item 例：
+            「鍵$\rightarrow$箱」，
+            「鍵$\rightarrow$棚」
+            の両方が内部に存在し，
+            質問時に「棚」を選択する
+        \end{itemize}
+        \vspace{0.3em}
+        \item 状態検索回路（State Retrieval Circuit）
+        \begin{itemize}\scriptsize
+            \item 状態を明示的に更新せず，質問時に関連する記述を検索する
+            \item 例：
+            「鍵はどこ？」
+            という質問から，
+            「鍵は棚へ移された」
+            の文へAttentionし, 
+            「棚」を取得する
+            \item 状態追跡は検索問題として解決されると仮定
+        \end{itemize}
+    \end{enumerate}
+    \vspace{0.5em}
+    \tiny
+    状態更新回路：
+    \href{https://arxiv.org/abs/2202.05262}
+    {Meng, K. et al., Locating and Editing Factual Associations in GPT, arXiv preprint arXiv:2202.05262, 2022.}
+    \vspace{0.2em}
+    動的読み出し回路：
+    \href{https://arxiv.org/abs/2211.00593}
+    {Wang, K. R. et al., Interpretability in the Wild: a Circuit for Indirect Object Identification in GPT-2 Small, arXiv preprint arXiv:2211.00593, 2022.}
+    \vspace{0.2em}
+    状態検索回路：
+    \href{https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html}
+    {Olsson, C. et al., In-context Learning and Induction Heads, Transformer Circuits Thread, 2022.}
+\end{frame}
+
+\begin{frame}{仮説検証の方針}
+    \begin{enumerate}\scriptsize
+        \item Behavior Validation
+        \begin{itemize}\scriptsize
+            \item bAbI Tasksを用いてモデルが状態追跡可能であることを確認
+            \item 状態更新回数やノイズ量を変化させて性能を測定
+        \end{itemize}
+        \vspace{0.2em}
+        \item Synthetic Datasetの構築
+        \begin{itemize}\scriptsize
+            \item プロンプト例：
+            
+            \tiny
+            John went to the \textcolor{red}{kitchen}.
+            \textcolor{violet}{The cat moved to the garden. The dog moved to the office.}
+            John went to the \textcolor{cyan}{playground}.
+            Where is John?
+            \scriptsize
+            \item \textcolor{red}{赤}：過去状態, \textcolor{cyan}{青}：現在状態, \textcolor{violet}{紫}：無関係な状態更新
+        \end{itemize}
+        \vspace{0.2em}
+        \item Localization
+        \begin{itemize}\scriptsize
+            \item Activation Patchingを用いて状態追跡に重要なAttention Head・MLPを特定
+            \item 状態更新文および質問文への寄与を測定
+        \end{itemize}
+        \vspace{0.2em}
+        \item Hypothesis Testing
+        \begin{itemize}\scriptsize
+            \item 状態更新回路：
+            更新文のActivationを破壊すると正答率が低下するか
+
+            \item 動的読み出し回路：
+            過去状態と現在状態の両方を表現するFeatureが存在するか
+
+            \item 状態検索回路：
+            質問時に最新状態記述へのAttentionが集中するか
+        \end{itemize}
+    \end{enumerate}
 \end{frame}
 
 % ==========================================
@@ -916,6 +1159,8 @@
         Shi, C. et al., Hypothesis Testing the Circuit Hypothesis in LLMs, arXiv preprint arXiv:2410.13032, 2024.
         \bibitem{item14}
         Beckmann, P. and Queloz, M., Mechanistic Indicators of Understanding in Large Language Models, arXiv preprint arXiv:2507.08017, 2025.
+        \bibitem{item15}
+        Rai, D., Zhou, Y., Feng, S., Saparov, A. and Yao, Z., A Practical Review of Mechanistic Interpretability for Transformer-Based Language Models, arXiv reprint arXiv:2407.02646, 2024.
     \end{thebibliography}
 \end{frame}
 
@@ -989,6 +1234,21 @@
     \vspace{1em}
     \tiny
     \href{https://arxiv.org/abs/2209.02535}{Dar, G. et al., Analyzing Transformers in Embedding Space, arXiv preprint arXiv:2209.02535, 2022.}
+\end{frame}
+
+\begin{frame}{Sparse Auto Encoder: SAE}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{SAE略図.png}
+        \end{figure}
+        \column{0.45\textwidth}
+        \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=1\linewidth]{SAE略図具体例.png}
+        \end{figure}
+    \end{columns}
 \end{frame}
 
 \end{document}
