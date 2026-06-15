@@ -1012,22 +1012,6 @@
 \end{frame}
 
 \begin{frame}{「状態更新の追跡」に関する研究}
-    振る舞い：物体や人物の状態(位置・所有権)が次々と変わる時, それらを正確に追跡する\\
-    \vspace{0.5em}
-    仮説：
-    \begin{enumerate}\scriptsize
-        \item 状態を上書きする(過去情報を抑制, 新しい情報を活性化させる)回路が存在する
-        \begin{itemize}\scriptsize
-            \item 「状態A：鍵が箱に入っている。, 状態B：鍵が箱から棚へ移される。, 質問：鍵は現在どこ？, 答え：棚」この時, Aを抑制, Bを活性化, または抑制+活性化させる回路が存在する
-        \end{itemize}\scriptsize
-        \item 古い情報と新しい情報から正解を読み出す回路が存在する
-        \begin{itemize}\scriptsize
-            \item A,BからBを選ぶ読み出し回路が存在する
-        \end{itemize}\scriptsize
-    \end{enumerate}
-\end{frame}
-
-\begin{frame}{「状態更新の追跡」に関する研究}
     仮説：
     \begin{enumerate}\scriptsize
         \item 状態更新回路（State Update Circuit）
@@ -1080,6 +1064,83 @@
     状態検索回路：
     \href{https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html}
     {Olsson, C. et al., In-context Learning and Induction Heads, Transformer Circuits Thread, 2022.}
+\end{frame}
+
+\begin{frame}{「状態更新の追跡」実験}
+    \begin{enumerate}\scriptsize
+        \item 各層の残差ストリームに対してctivation Patching
+        \begin{itemize}\scriptsize
+            \item Clean1「Context: Sandra moved to the kitchen. John travelled to the kitchen. Question: Where is John? Answer:」
+            \item Corrupted1「Context: Sandra moved to the kitchen. John travelled to the bedroom. Question: Where is John? Answer:」
+            \vspace{0.3em}
+            \item Clean2「Context: Sandra moved to the kitchen. John travelled to the kitchen. John travelled to the bathroom. Question: Where is John? Answer:」
+            \item Corrupted2「Context: Sandra moved to the kitchen. John travelled to the kitchen. John travelled to the playground. Question: Where is John? Answer:」
+        \end{itemize}
+        \vspace{0.3em}
+        \item 各層のAttentionhead出力に対してActivation Patching
+        \begin{itemize}\scriptsize
+            \item プロンプトは実験１と同様
+        \end{itemize}
+        \vspace{0.3em}
+        \item 各層のFF層の出力に対してActivation Patching
+        \begin{itemize}\scriptsize
+            \item プロンプトは実験１と同様
+        \end{itemize}
+        \vspace{0.3em}
+        \item 実験2で最も影響を与えたL19-H1に対してQとVのアテンションマップ
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{実験1 結果}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{gemma_babi_task1_rs_s_patching.png}
+        \end{figure}
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{gemma_babi_task1_rs_m_patching.png}
+        \end{figure}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{実験2 結果}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{gemma_babi_task1_head_s_patching.png}
+        \end{figure}
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{gemma_babi_task1_head_m_patching.png}
+        \end{figure}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{実験3 結果}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{gemma_babi_task1_head_s_patching.png}
+        \end{figure}
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{gemma_babi_task1_head_m_patching.png}
+        \end{figure}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{実験4 結果}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.8\linewidth]{gemma_babi_task1_l19_h1_attention_map.png}
+    \end{figure}
 \end{frame}
 
 \begin{frame}{仮説検証の方針}
