@@ -904,34 +904,6 @@
     \href{https://arxiv.org/abs/2407.02646}{Rai, D. et al., A Practical Review of Mechanistic Interpretability for Transformer-Based Language Models, arXiv preprint arXiv:2407.02646, 2024.}
 \end{frame}
 
-\begin{frame}{Gemma2-2bについて}
-    \footnotesize
-    \begin{table}[h]
-        \centering
-        \begin{tabular}{lc}
-            \hline
-            項目 & 値 \\
-            \hline
-            総パラメータ数 & 26億 \\
-            Transformer層数 & 26 \\
-            隠れ層次元数 ($d_{\mathrm{model}}$) & 2304 \\
-            MLP次元数 & 9216 \\
-            Attention Head数 & 8 \\
-            KV Head数 (GQA) & 4 \\
-            Head Dimension & 256 \\
-            最大コンテキスト長 & 8192 tokens \\
-            語彙数 & 256,000 \\
-            Position Encoding & RoPE \\
-            Attention方式 & GQA + Local/Global Attention \\
-            Sliding Window Size & 4096 tokens \\
-            \hline
-        \end{tabular}
-    \end{table}
-\vspace{0.5em}
-\tiny
-\href{https://arxiv.org/abs/2408.00118}{Gemma Team et al., Gemma 2: Improving Open Language Models at a Practical Size, arXiv preprint arXiv:2408.00118, 2024.}
-\end{frame}
-
 \begin{frame}{Gemma2-2bとGPT-2 Smallの比較}
     \footnotesize
     \begin{table}[h]
@@ -1011,7 +983,7 @@
     \end{enumerate}
 \end{frame}
 
-\begin{frame}{「状態更新の追跡」に関する研究}
+\begin{frame}{「状態更新の追跡」 仮説}
     仮説：
     \begin{enumerate}\scriptsize
         \item 状態更新回路（State Update Circuit）
@@ -1038,32 +1010,16 @@
             の両方が内部に存在し，
             質問時に「棚」を選択する
         \end{itemize}
-        \vspace{0.3em}
-        \item 状態検索回路（State Retrieval Circuit）
-        \begin{itemize}\scriptsize
-            \item 状態を明示的に更新せず，質問時に関連する記述を検索する
-            \item 例：
-            「鍵はどこ？」
-            という質問から，
-            「鍵は棚へ移された」
-            の文へAttentionし, 
-            「棚」を取得する
-            \item 状態追跡は検索問題として解決されると仮定
-        \end{itemize}
     \end{enumerate}
     \vspace{0.5em}
     \tiny
-    状態更新回路：
+    状態更新回路に関連しているかも：GPT-Jの中間層のMLPに「Eiffel Tower → Paris」のような知識を保管している。そのMLPを1箇所変えるだけで知識編集が可能\\
     \href{https://arxiv.org/abs/2202.05262}
-    {Meng, K. et al., Locating and Editing Factual Associations in GPT, arXiv preprint arXiv:2202.05262, 2022.}
-    \vspace{0.2em}
-    動的読み出し回路：
+    {Meng, K. et al., Locating and Editing Factual Associations in GPT, arXiv preprint arXiv:2202.05262, 2022.}\\
+    \vspace{1em}
+    動的読み出し回路に関連しているかも：GPT-2 Smallの内部では, 「When Mary and John went to the store, John gave a drink to 」間接目的語の識別を可能にする回路（26のアテンションヘッド群）を特定\\
     \href{https://arxiv.org/abs/2211.00593}
     {Wang, K. R. et al., Interpretability in the Wild: a Circuit for Indirect Object Identification in GPT-2 Small, arXiv preprint arXiv:2211.00593, 2022.}
-    \vspace{0.2em}
-    状態検索回路：
-    \href{https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html}
-    {Olsson, C. et al., In-context Learning and Induction Heads, Transformer Circuits Thread, 2022.}
 \end{frame}
 
 \begin{frame}{「状態更新の追跡」実験}
@@ -1082,12 +1038,12 @@
             \item プロンプトは実験１と同様
         \end{itemize}
         \vspace{0.3em}
+        \item 実験2で影響を確認したHeadのQとVのアテンションマップ
+        \vspace{0.3em}
         \item 各層のFF層の出力に対してActivation Patching
         \begin{itemize}\scriptsize
             \item プロンプトは実験１と同様
         \end{itemize}
-        \vspace{0.3em}
-        \item 実験2で最も影響を与えたL19-H1に対してQとVのアテンションマップ
     \end{enumerate}
 \end{frame}
 
@@ -1104,6 +1060,11 @@
             \includegraphics[width=1\linewidth]{gemma_babi_task1_rs_m_patching.png}
         \end{figure}
     \end{columns}
+    \vspace{0.5em}
+    \begin{itemize}\scriptsize
+        \item L0からL17,18 正解トークンの位置に重要な情報が集約されている
+        \item L17,18から最終トークン位置に情報が徐々に移動
+    \end{itemize}
 \end{frame}
 
 \begin{frame}{実験2 結果}
@@ -1111,77 +1072,86 @@
         \column{0.5\textwidth}
         \begin{figure}[bthp]
             \centering
-            \includegraphics[width=1\linewidth]{gemma_babi_task1_head_s_patching.png}
+            \includegraphics[width=0.7\linewidth]{gemma_babi_task1_head_s_patching.png}
         \end{figure}
         \column{0.5\textwidth}
         \begin{figure}[bthp]
             \centering
-            \includegraphics[width=1\linewidth]{gemma_babi_task1_head_m_patching.png}
+            \includegraphics[width=0.7\linewidth]{gemma_babi_task1_head_m_patching.png}
         \end{figure}
     \end{columns}
+    \begin{itemize}\scriptsize
+        \item L17あたりからAttentionが重要になる可能性がある
+        \item L19, H1などが正の影響（出力がCleanに近づく）を示した
+        \item L20, H2などが負の影響を示した
+    \end{itemize}
 \end{frame}
 
-\begin{frame}{実験3 結果}
+\begin{frame}{実験3 結果 L19, H1}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.6\linewidth]{gemma_babi_task1_l19_h1_attention_map.png}
+    \end{figure}
+    \begin{itemize}\scriptsize
+        \item 最終トークンから最新状態(bathroom)へピンポイントのアテンション
+        \item 文章の「.」位置から文章の主語へ強いアテンション
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{実験3 結果 L20, H2, H3}
     \begin{columns}[c]
         \column{0.5\textwidth}
         \begin{figure}[bthp]
             \centering
-            \includegraphics[width=1\linewidth]{gemma_babi_task1_head_s_patching.png}
+            \includegraphics[width=1\linewidth]{gemma_babi_task1_l20_h2_attention_map.png}
         \end{figure}
         \column{0.5\textwidth}
         \begin{figure}[bthp]
             \centering
-            \includegraphics[width=1\linewidth]{gemma_babi_task1_head_m_patching.png}
+            \includegraphics[width=1\linewidth]{gemma_babi_task1_l20_h3_attention_map.png}
+        \end{figure}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{実験3 結果 L21, H1}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.6\linewidth]{gemma_babi_task1_l21_h1_attention_map.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{実験3 結果 L22, H2, H3}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{gemma_babi_task1_l22_h2_attention_map.png}
+        \end{figure}
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{gemma_babi_task1_l22_h3_attention_map.png}
         \end{figure}
     \end{columns}
 \end{frame}
 
 \begin{frame}{実験4 結果}
-    \begin{figure}[bthp]
-        \centering
-        \includegraphics[width=0.8\linewidth]{gemma_babi_task1_l19_h1_attention_map.png}
-    \end{figure}
-\end{frame}
-
-\begin{frame}{仮説検証の方針}
-    \begin{enumerate}\scriptsize
-        \item Behavior Validation
-        \begin{itemize}\scriptsize
-            \item bAbI Tasksを用いてモデルが状態追跡可能であることを確認
-            \item 状態更新回数やノイズ量を変化させて性能を測定
-        \end{itemize}
-        \vspace{0.2em}
-        \item Synthetic Datasetの構築
-        \begin{itemize}\scriptsize
-            \item プロンプト例：
-            
-            \tiny
-            John went to the \textcolor{red}{kitchen}.
-            \textcolor{violet}{The cat moved to the garden. The dog moved to the office.}
-            John went to the \textcolor{cyan}{playground}.
-            Where is John?
-            \scriptsize
-            \item \textcolor{red}{赤}：過去状態, \textcolor{cyan}{青}：現在状態, \textcolor{violet}{紫}：無関係な状態更新
-        \end{itemize}
-        \vspace{0.2em}
-        \item Localization
-        \begin{itemize}\scriptsize
-            \item Activation Patchingを用いて状態追跡に重要なAttention Head・MLPを特定
-            \item 状態更新文および質問文への寄与を測定
-        \end{itemize}
-        \vspace{0.2em}
-        \item Hypothesis Testing
-        \begin{itemize}\scriptsize
-            \item 状態更新回路：
-            更新文のActivationを破壊すると正答率が低下するか
-
-            \item 動的読み出し回路：
-            過去状態と現在状態の両方を表現するFeatureが存在するか
-
-            \item 状態検索回路：
-            質問時に最新状態記述へのAttentionが集中するか
-        \end{itemize}
-    \end{enumerate}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{gemma_babi_task1_mlp_s_patching.png}
+        \end{figure}
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=1\linewidth]{gemma_babi_task1_mlp_m_patching.png}
+        \end{figure}
+    \end{columns}
+    \begin{itemize}\scriptsize
+        \item L0からL17,18のMLP（正解トークンの位置）, L20からL25のMLP（最終トークンの位置）にタスクに必要な情報が含まれている可能性がある
+        \item アルゴリズムの大まかな考察：L0からL18のMLPにタスクに必要な知識が保管され, L19~L22のアテンションによって最終トークン位置へ必要な情報が移動、L23あたりから再度MLPで情報の保管
+    \end{itemize}
 \end{frame}
 
 % ==========================================
@@ -1310,6 +1280,75 @@
         \includegraphics[width=1\linewidth]{SAE略図具体例.png}
         \end{figure}
     \end{columns}
+\end{frame}
+
+\begin{frame}{仮説検証の方針}
+    \begin{enumerate}\scriptsize
+        \item Behavior Validation
+        \begin{itemize}\scriptsize
+            \item bAbI Tasksを用いてモデルが状態追跡可能であることを確認
+            \item 状態更新回数やノイズ量を変化させて性能を測定
+        \end{itemize}
+        \vspace{0.2em}
+        \item Synthetic Datasetの構築
+        \begin{itemize}\scriptsize
+            \item プロンプト例：
+            
+            \tiny
+            John went to the \textcolor{red}{kitchen}.
+            \textcolor{violet}{The cat moved to the garden. The dog moved to the office.}
+            John went to the \textcolor{cyan}{playground}.
+            Where is John?
+            \scriptsize
+            \item \textcolor{red}{赤}：過去状態, \textcolor{cyan}{青}：現在状態, \textcolor{violet}{紫}：無関係な状態更新
+        \end{itemize}
+        \vspace{0.2em}
+        \item Localization
+        \begin{itemize}\scriptsize
+            \item Activation Patchingを用いて状態追跡に重要なAttention Head・MLPを特定
+            \item 状態更新文および質問文への寄与を測定
+        \end{itemize}
+        \vspace{0.2em}
+        \item Hypothesis Testing
+        \begin{itemize}\scriptsize
+            \item 状態更新回路：
+            更新文のActivationを破壊すると正答率が低下するか
+
+            \item 動的読み出し回路：
+            過去状態と現在状態の両方を表現するFeatureが存在するか
+
+            \item 状態検索回路：
+            質問時に最新状態記述へのAttentionが集中するか
+        \end{itemize}
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{Gemma2-2bについて}
+    \footnotesize
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{lc}
+            \hline
+            項目 & 値 \\
+            \hline
+            総パラメータ数 & 26億 \\
+            Transformer層数 & 26 \\
+            隠れ層次元数 ($d_{\mathrm{model}}$) & 2304 \\
+            MLP次元数 & 9216 \\
+            Attention Head数 & 8 \\
+            KV Head数 (GQA) & 4 \\
+            Head Dimension & 256 \\
+            最大コンテキスト長 & 8192 tokens \\
+            語彙数 & 256,000 \\
+            Position Encoding & RoPE \\
+            Attention方式 & GQA + Local/Global Attention \\
+            Sliding Window Size & 4096 tokens \\
+            \hline
+        \end{tabular}
+    \end{table}
+\vspace{0.5em}
+\tiny
+\href{https://arxiv.org/abs/2408.00118}{Gemma Team et al., Gemma 2: Improving Open Language Models at a Practical Size, arXiv preprint arXiv:2408.00118, 2024.}
 \end{frame}
 
 \end{document}
