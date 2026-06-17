@@ -1026,11 +1026,9 @@
     \begin{enumerate}\scriptsize
         \item 各層の残差ストリームに対してActivation Patching
         \begin{itemize}\scriptsize
-            \item Clean1「Context: Sandra moved to the kitchen. John travelled to the kitchen. Question: Where is John? Answer:」
-            \item Corrupted1「Context: Sandra moved to the kitchen. John travelled to the bedroom. Question: Where is John? Answer:」
-            \vspace{0.3em}
-            \item Clean2「Context: Sandra moved to the kitchen. John travelled to the kitchen. John travelled to the bathroom. Question: Where is John? Answer:」
-            \item Corrupted2「Context: Sandra moved to the kitchen. John travelled to the kitchen. John travelled to the playground. Question: Where is John? Answer:」
+            \item Clean「Context: Sandra moved to the kitchen. John travelled to the kitchen. John travelled to the \textcolor{cyan}{bathroom}. Question: Where is John? Answer:」
+            \vspace{0.5em}
+            \item Corrupted「Context: Sandra moved to the kitchen. John travelled to the kitchen. John travelled to the \textcolor{purple}{playground}. Question: Where is John? Answer:」
         \end{itemize}
         \vspace{0.3em}
         \item 各層のAttentionhead出力に対してActivation Patching
@@ -1048,22 +1046,15 @@
 \end{frame}
 
 \begin{frame}{実験1 結果}
-    \begin{columns}[c]
-        \column{0.5\textwidth}
-        \begin{figure}[bthp]
-            \centering
-            \includegraphics[width=1\linewidth]{gemma_babi_task1_rs_s_patching.png}
-        \end{figure}
-        \column{0.5\textwidth}
-        \begin{figure}[bthp]
-            \centering
-            \includegraphics[width=1\linewidth]{gemma_babi_task1_rs_m_patching.png}
-        \end{figure}
-    \end{columns}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.7\linewidth]{gemma_babi_task1_rs_m_patching.png}
+    \end{figure}
     \vspace{0.5em}
     \begin{itemize}\scriptsize
-        \item L0からL17,18 正解トークンの位置に重要な情報が集約されている
-        \item L17,18から最終トークン位置に情報が徐々に移動
+        \item L0からL16："Answer:"に続くべき単語{(bathroom, kitchen)}の位置に重要な情報が集約されている
+        \item L17からL23：最終トークン位置に情報を徐々に移しているように見える
+        \item L24, 25：プロンプト最終文字の位置に情報集約されている
     \end{itemize}
 \end{frame}
 
@@ -1072,19 +1063,47 @@
         \column{0.5\textwidth}
         \begin{figure}[bthp]
             \centering
-            \includegraphics[width=0.7\linewidth]{gemma_babi_task1_head_s_patching.png}
+            \includegraphics[width=0.7\linewidth]{gemma_babi_task1_head_m_patching.png}
         \end{figure}
+        \column{0.5\textwidth}
+        \begin{itemize}\scriptsize
+            \item L17あたりからAttentionが重要になる可能性がある
+            \item L19, H1などが正の影響（出力がCleanに近づく）を示した
+            \item L20, H2が負の影響を示した{(Clean側のベクトルをCorruptedに入れたにもかかわらずCleanの答えを出さないように動いている)}
+        \end{itemize}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{実験2 task2 結果}
+    \begin{columns}[c]
         \column{0.5\textwidth}
         \begin{figure}[bthp]
             \centering
-            \includegraphics[width=0.7\linewidth]{gemma_babi_task1_head_m_patching.png}
+            \includegraphics[width=0.7\linewidth]{gemma_babi_task2_head_patching.png}
         \end{figure}
+        \column{0.5\textwidth}
+        \begin{itemize}\scriptsize
+            \item L17あたりからAttentionが重要になる可能性がある
+            \item L19, H1などが正の影響（出力がCleanに近づく）を示した
+            \item L20, H2が負の影響を示した{(Clean側のベクトルをCorruptedに入れたにもかかわらずCleanの答えを出さないように動いている)}
+        \end{itemize}
     \end{columns}
-    \begin{itemize}\scriptsize
-        \item L17あたりからAttentionが重要になる可能性がある
-        \item L19, H1などが正の影響（出力がCleanに近づく）を示した
-        \item L20, H2などが負の影響を示した
-    \end{itemize}
+\end{frame}
+
+\begin{frame}{実験2 task6 結果}
+    \begin{columns}[c]
+        \column{0.5\textwidth}
+        \begin{figure}[bthp]
+            \centering
+            \includegraphics[width=0.7\linewidth]{gemma_babi_task6_head_patching.png}
+        \end{figure}
+        \column{0.5\textwidth}
+        \begin{itemize}\scriptsize
+            \item L17あたりからAttentionが重要になる可能性がある
+            \item L19, H1などが正の影響（出力がCleanに近づく）を示した
+            \item L20, H2が負の影響を示した{(Clean側のベクトルをCorruptedに入れたにもかかわらずCleanの答えを出さないように動いている)}
+        \end{itemize}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{実験3 結果 L19, H1}
