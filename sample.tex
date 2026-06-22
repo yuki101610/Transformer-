@@ -1045,7 +1045,7 @@
     \end{enumerate}
 \end{frame}
 
-\begin{frame}{実験1 結果}
+\begin{frame}{実験1 task1 結果}
     \begin{figure}[bthp]
         \centering
         \includegraphics[width=0.7\linewidth]{gemma_babi_task1_rs_m_patching.png}
@@ -1058,7 +1058,20 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{実験2 結果}
+\begin{frame}{実験1 task2 結果}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.7\linewidth]{gemma_babi_task2_rs_patching.png}
+    \end{figure}
+    \vspace{0.5em}
+    \begin{itemize}\scriptsize
+        \item L0からL16："Answer:"に続くべき単語{(bathroom, kitchen)}の位置に重要な情報が集約されている
+        \item L17からL23：最終トークン位置に情報を徐々に移しているように見える
+        \item L24, 25：プロンプト最終文字の位置に情報集約されている
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{実験2 task1 結果}
     \begin{columns}[c]
         \column{0.5\textwidth}
         \begin{figure}[bthp]
@@ -1158,19 +1171,44 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{実験4 結果}
-    \begin{columns}[c]
-        \column{0.5\textwidth}
-        \begin{figure}[bthp]
-            \centering
-            \includegraphics[width=1\linewidth]{gemma_babi_task1_mlp_s_patching.png}
-        \end{figure}
-        \column{0.5\textwidth}
-        \begin{figure}[bthp]
-            \centering
-            \includegraphics[width=1\linewidth]{gemma_babi_task1_mlp_m_patching.png}
-        \end{figure}
-    \end{columns}
+\begin{frame}{実験4 task1 結果}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.7\linewidth]{gemma_babi_task1_mlp_m_patching.png}
+    \end{figure}
+    \begin{itemize}\scriptsize
+        \item L0からL17,18のMLP（正解トークンの位置）, L20からL25のMLP（最終トークンの位置）にタスクに必要な情報が含まれている可能性がある
+        \item アルゴリズムの大まかな考察：L0からL18のMLPにタスクに必要な知識が保管され, L19~L22のアテンションによって最終トークン位置へ必要な情報が移動、L23あたりから再度MLPで情報の保管
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{実験4 task2 結果}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.7\linewidth]{gemma_babi_task2_mlp_patching.png}
+    \end{figure}
+    \begin{itemize}\scriptsize
+        \item L0からL17,18のMLP（正解トークンの位置）, L20からL25のMLP（最終トークンの位置）にタスクに必要な情報が含まれている可能性がある
+        \item アルゴリズムの大まかな考察：L0からL18のMLPにタスクに必要な知識が保管され, L19~L22のアテンションによって最終トークン位置へ必要な情報が移動、L23あたりから再度MLPで情報の保管
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{実験4 task6 結果}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.7\linewidth]{gemma_babi_task6_mlp_patching.png}
+    \end{figure}
+    \begin{itemize}\scriptsize
+        \item L0からL17,18のMLP（正解トークンの位置）, L20からL25のMLP（最終トークンの位置）にタスクに必要な情報が含まれている可能性がある
+        \item アルゴリズムの大まかな考察：L0からL18のMLPにタスクに必要な知識が保管され, L19~L22のアテンションによって最終トークン位置へ必要な情報が移動、L23あたりから再度MLPで情報の保管
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{実験4 task9 結果}
+    \begin{figure}[bthp]
+        \centering
+        \includegraphics[width=0.7\linewidth]{gemma_babi_task9_mlp_patching.png}
+    \end{figure}
     \begin{itemize}\scriptsize
         \item L0からL17,18のMLP（正解トークンの位置）, L20からL25のMLP（最終トークンの位置）にタスクに必要な情報が含まれている可能性がある
         \item アルゴリズムの大まかな考察：L0からL18のMLPにタスクに必要な知識が保管され, L19~L22のアテンションによって最終トークン位置へ必要な情報が移動、L23あたりから再度MLPで情報の保管
